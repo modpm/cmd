@@ -40,7 +40,7 @@ public class Command {
     
     /** Gets the name of the command. */
     public string name() const nothrow @safe {
-        return this.name;
+        return this._name;
     }
 
     /** Sets the description of the command */
