@@ -55,7 +55,22 @@ public class Command {
         return this._description;
     }
 
-    private const(Command) findCommand(string name, const(Command) root = null) const nothrow @safe {
+    /**
+     * Searches for a subcommand with the specified name.
+     *
+     * This function can search either the immediate subcommands of this command
+     * or recursively within a specified subcommand tree.
+     *
+     * Params:
+     *   name  = The name of the subcommand to search for.
+     *   root  = Optional. The command node to start the search from.
+     *           - If `null`, the search is performed only among this command’s immediate subcommands.
+     *           - If non-`null`, the search is recursive starting from `root` and checks all nested subcommands.
+     *
+     * Returns:
+     *   The first `Command` matching the specified name, or `null` if no match is found.
+     */
+    public const(Command) findCommand(string name, const(Command) root = null) const nothrow @safe {
         if (root !is null && root.name() == name) return root;
         foreach (cmd; root is null ? subcommands : root.subcommands) {
             if (cmd.name() == name) return cmd;
