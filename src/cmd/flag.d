@@ -1,5 +1,6 @@
 module cmd.flag;
 
+import std.range;
 import std.string;
 
 /**
@@ -72,6 +73,15 @@ public class Flag {
             ~ (longName !is null ? (shortName !is null ? ", " : "") ~ "--" ~ longName : "");
     }
 
+    /** Returns formatted name padded with spaces if there is no short option. */
+    public string paddedName() const nothrow @safe {
+        auto name = formattedName();
+        if (shortName !is null)
+            return name;
+        else
+            return "    " ~ name;
+    }
+
     /**
      * Checks whether the given query matches this flag.
      *
@@ -89,7 +99,7 @@ public class Flag {
     public override hash_t toHash() const nothrow @safe {
         return formattedName().hashOf();
     }
-    
+
     public override bool opEquals(Object o) const nothrow {
         if (auto other = cast(Flag) o)
             return this.formattedName() == other.formattedName();

@@ -5,6 +5,7 @@ import std.algorithm;
 import std.array;
 import std.stdio;
 import std.string;
+import std.range : repeat;
 
 import cmd.argument;
 import cmd.flag;
@@ -37,7 +38,7 @@ public class Command {
         this._name = name;
         this._action = (args) => args.command.printHelp();
     }
-    
+
     /** Gets the name of the command. */
     public string name() const nothrow @safe {
         return this._name;
@@ -48,7 +49,7 @@ public class Command {
         this._description = description;
         return this;
     }
-    
+
     /** Gets the description of the command */
     public string description() const nothrow @safe {
         return this._description;
@@ -140,7 +141,7 @@ public class Command {
         return this;
     }
 
-    /** 
+    /**
      * Adds an option or flag from formatted string.
      *
      * Params:
@@ -156,7 +157,7 @@ public class Command {
         return this;
     }
 
-    /** 
+    /**
      * Adds an argument.
      *
      * Throws:
@@ -228,11 +229,57 @@ public class Command {
     public int printHelp() const {
         writeln("\x1b[1mUsage:\x1b[0m");
         writeln("  " ~ usage());
-        if (_description !is null) {
+
+        if (description() !is null) {
             writeln();
             writeln("\x1b[1mDescription:\x1b[0m");
-            writeln("  " ~ _description);
+            writeln("  " ~ description());
         }
+
+        size_t longest = 0;
+        foreach (cmd; subcommands)
+            longest = max(longest, cmd.name().length);
+
+        foreach (arg; arguments)
+            longest = max(longest, arg.name.length);
+
+        auto allOpts = cast(Flag[]) (flags ~ cast(Flag[]) options);
+        foreach (opt; allOpts)
+                longest = max(longest, opt.paddedName().length);
+
+        if (subcommands !is null) {
+            writeln();
+            writeln("\x1b[1mCommands:\x1b[0m");
+
+            foreach (cmd; (cast(Command[]) subcommands).dup.sort!((a, b) {
+                return a.name() < b.name();
+            }))
+                writeln("  " ~ cmd.name() ~ ' '.repeat(longest - cmd.name().length + 2).array ~ "\x1b[2m"
+                        ~ cmd.description() ~ "\x1b[0m");
+        }
+
+        if (arguments !is null) {
+            writeln();
+            writeln("\x1b[1mArguments:\x1b[0m");
+
+            foreach (arg; arguments)
+                writeln("  " ~ arg.name ~ ' '.repeat(longest - arg.name.length + 2).array ~ "\x1b[2m"
+                        ~ arg.description ~ "\x1b[0m");
+        }
+
+        if (!flags.empty() || !options.empty()) {
+            writeln();
+            writeln("\x1b[1mOptions:\x1b[0m");
+
+            foreach (opt; allOpts.sort!((a, b) {
+                auto nameA = a.longName !is null ? a.longName : a.shortName;
+                auto nameB = b.longName !is null ? b.longName : b.shortName;
+                return nameA < nameB;
+            }))
+                writeln("  " ~ opt.paddedName() ~ ' '.repeat(longest - opt.paddedName().length + 2).array ~ "\x1b[2m"
+                        ~ opt.description ~ "\x1b[0m");
+        }
+
         return 0;
     }
 

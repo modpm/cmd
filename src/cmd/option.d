@@ -8,10 +8,10 @@ import cmd.flag;
 public final class Option : Flag {
     /** Name of the parameter. */
     public const string paramName;
-    
+
     /** Whether the option is required. */
     public const bool required;
-    
+
     /** Default value of the parameter, or `null`. */
     public const string defaultValue;
 
@@ -85,11 +85,20 @@ public final class Option : Flag {
     public override string formattedName() const nothrow @safe {
         return super.formattedName() ~ " " ~ (required ? "<" ~ paramName ~ ">" : "[" ~ paramName ~ "]");
     }
-    
+
+    /** Returns formatted name padded with spaces if there is no short option. */
+    public override string paddedName() const nothrow @safe {
+        auto name = formattedName();
+        if (shortName !is null)
+            return name;
+        else
+            return "    " ~ name;
+    }
+
     public override hash_t toHash() const nothrow @safe {
         return formattedName().hashOf();
     }
-    
+
     public override bool opEquals(Object o) const nothrow {
         if (auto other = cast(Option) o)
             return this.formattedName() == other.formattedName();

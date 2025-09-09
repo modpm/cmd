@@ -12,10 +12,10 @@ import cmd.program;
 public final class ParsedArgs {
     /** Command associated with the parsed arguments. */
     public const(Command) command;
-    
+
     /** Program associated with the parsed arguments. */
     public const(Program) program;
-    
+
     private bool[string] flags;
     private string[][string] options;
     private string[string] arguments;
