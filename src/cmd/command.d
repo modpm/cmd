@@ -55,9 +55,9 @@ public class Command {
     }
 
     private const(Command) findCommand(string name, const(Command) root = null) const nothrow @safe {
-        if (root !is null && root.name == name) return root;
+        if (root !is null && root.name() == name) return root;
         foreach (cmd; root is null ? subcommands : root.subcommands) {
-            if (cmd.name == name) return cmd;
+            if (cmd.name() == name) return cmd;
             if (root !is null) {
                 const Command found = findCommand(name, cmd);
                 if (found !is null) return found;
@@ -97,7 +97,7 @@ public class Command {
     public Command add(Command cmd) @safe {
         assert(cmd.chain is null, "Subcommand already has a command chain");
         assert(arguments.empty(), "Cannot add subcommands to a command that has arguments");
-        assert(findCommand(cmd.name) is null, "Command '" ~ cmd.name ~ "' already exists");
+        assert(findCommand(cmd.name()) is null, "Command '" ~ cmd.name() ~ "' already exists");
         cmd.chain = this.chain ~ cmd;
         subcommands ~= cmd;
         return this;
@@ -212,7 +212,7 @@ public class Command {
         if (program.versionOption() || program.helpOption())
             sb.put(" [global options]");
         if (chain.length > 1)
-            sb.put(" " ~ chain[1..$].map!(c => c.name).array.join(" "));
+            sb.put(" " ~ chain[1..$].map!(c => c.name()).array.join(" "));
         if (!subcommands.empty())
             sb.put(" <command> ...");
         else {
