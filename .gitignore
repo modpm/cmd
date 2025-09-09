@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/cmd
+libcmd.so
+libcmd.dylib
+libcmd.dll
+libcmd.a
+libcmd.lib
+libcmd-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
