@@ -2,6 +2,8 @@ module cmd.argument;
 
 import std.string;
 
+import cmd.ansi;
+
 /** Represents a command-line argument. */
 public class Argument {
     /** Name of the argument. */
@@ -77,9 +79,18 @@ public class Argument {
         );
     }
 
-    /** Returns formatted name, e.g., "<file>" or "[files...]". */
-    public string formattedName() const nothrow @safe {
+    /**
+     * Returns formatted name, e.g., "<file>" or "[files...]".
+     *
+     * Params:
+     *   colors = Whether to use colors.
+     */
+    public string formattedName(bool colors = false) const nothrow @safe {
         const auto namePart = name ~ (variadic ? "..." : "");
+        if (colors)
+            return required
+                ? "<".brightBlack() ~ namePart.dim() ~ ">".brightBlack()
+                : "[".brightBlack() ~ namePart.dim() ~ "]".brightBlack();
         return required ? "<" ~ namePart ~ ">" : "[" ~ namePart ~ "]";
     }
 }

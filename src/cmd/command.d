@@ -3,11 +3,13 @@ module cmd.command;
 import core.stdc.stdlib;
 import std.algorithm;
 import std.array;
+import std.range : repeat;
 import std.stdio;
 import std.string;
-import std.range : repeat;
 
+import cmd.ansi;
 import cmd.argument;
+import cmd.document;
 import cmd.flag;
 import cmd.option;
 import cmd.parsed_args;
@@ -214,10 +216,12 @@ public class Command {
     /**
      * Gets the usage string for this command.
      *
+     * Params:
+     *   colors = Whether to use colors in the usage string.
      * Throws:
      *   AssertionError if command chain is null or empty, or if first command is not a Program.
      */
-    public string usage() const {
+    public string usage(bool colors = false) const {
         assert(chain !is null, "Command chain is not initialised");
         assert(!chain.empty(), "Command chain is empty. The command should have at least itself in its chain.");
         Program program = cast(Program) chain[0];
@@ -226,75 +230,62 @@ public class Command {
         Appender!string sb;
         sb.put(program.name());
         if (program.versionOption() || program.helpOption())
-            sb.put(chain.length > 1 ? " [global options]" : " [options]");
+            sb.put(" "
+                ~ "[".brightBlack() ~ ((chain.length > 1 ? "global " : "") ~ "options").dim() ~ "]".brightBlack());
         if (chain.length > 1)
             sb.put(" " ~ chain[1..$].map!(c => c.name()).array.join(" "));
         if (!subcommands.empty())
-            sb.put(" <command> ...");
+            sb.put(" " ~ "<".brightBlack() ~ "command".dim() ~ ">".brightBlack() ~ " " ~ "...".brightBlack());
         else {
             if (!options.empty() || !flags.empty())
-                sb.put(" " ~ (options.any!(o => o.required) ? "<options>" : "[options]"));
+                sb.put(" " ~ (options.any!(o => o.required)
+                    ? "<".brightBlack() ~ "options".dim() ~ ">".brightBlack()
+                    : "[".brightBlack() ~ "options".dim() ~ "]".brightBlack()
+                ));
             foreach (arg; arguments)
-                sb.put(" " ~ arg.formattedName());
+                sb.put(" " ~ arg.formattedName(colors));
         }
-        return sb.data;
+        return colors ? sb.data : sb.data.stripAnsi();
     }
 
     /** Prinths help for the command. */
     public int printHelp() const {
-        writeln("\x1b[1mUsage:\x1b[0m");
-        writeln("  " ~ usage());
-
-        if (description() !is null) {
-            writeln();
-            writeln("\x1b[1mDescription:\x1b[0m");
-            writeln("  " ~ description());
-        }
-
-        size_t longest = 0;
-        foreach (cmd; subcommands)
-            longest = max(longest, cmd.name().length);
-
-        foreach (arg; arguments)
-            longest = max(longest, arg.name.length);
-
-        auto allOpts = cast(Flag[]) (flags ~ cast(Flag[]) options);
-        foreach (opt; allOpts)
-                longest = max(longest, opt.paddedName().length);
+        auto doc = new Document();
+        doc.add("Usage:".bold(), usage(true));
 
         if (subcommands !is null) {
-            writeln();
-            writeln("\x1b[1mCommands:\x1b[0m");
+            auto s = new Section("Commands:".bold());
+            doc.add(s);
 
             foreach (cmd; (cast(Command[]) subcommands).dup.sort!((a, b) {
                 return a.name() < b.name();
-            }))
-                writeln("  " ~ cmd.name() ~ ' '.repeat(longest - cmd.name().length + 2).array ~ "\x1b[2m"
-                        ~ cmd.description() ~ "\x1b[0m");
+            })) s.add(cmd.name(), cmd.description());
         }
 
         if (arguments !is null) {
-            writeln();
-            writeln("\x1b[1mArguments:\x1b[0m");
+            auto s = new Section("Arguments:".bold());
+            doc.add(s);
 
             foreach (arg; arguments)
-                writeln("  " ~ arg.name ~ ' '.repeat(longest - arg.name.length + 2).array ~ "\x1b[2m"
-                        ~ arg.description ~ "\x1b[0m");
+                s.add(arg.name, arg.description);
         }
 
         if (!flags.empty() || !options.empty()) {
-            writeln();
-            writeln("\x1b[1mOptions:\x1b[0m");
+            auto s = new Section("Options:".bold());
+            doc.add(s);
 
-            foreach (opt; allOpts.sort!((a, b) {
+            foreach (opt; (cast(Flag[]) (flags ~ cast(Flag[]) options)).sort!((a, b) {
                 auto nameA = a.longName !is null ? a.longName : a.shortName;
                 auto nameB = b.longName !is null ? b.longName : b.shortName;
                 return nameA < nameB;
-            }))
-                writeln("  " ~ opt.paddedName() ~ ' '.repeat(longest - opt.paddedName().length + 2).array ~ "\x1b[2m"
-                        ~ opt.description ~ "\x1b[0m");
+            })) {
+                if (Option o = cast(Option) opt)
+                    s.add(o.paddedName(true), opt.description);
+                else s.add(opt.paddedName(), opt.description);
+            }
         }
 
+        doc.print();
         return 0;
     }
 

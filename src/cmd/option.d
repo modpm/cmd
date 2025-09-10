@@ -2,6 +2,7 @@ module cmd.option;
 
 import std.string;
 
+import cmd.ansi;
 import cmd.flag;
 
 /** Represents a command-line option with a parameter. */
@@ -81,18 +82,46 @@ public final class Option : Flag {
         );
     }
 
-    /** Returns formatted name with parameter placeholder. */
-    public override string formattedName() const nothrow @safe {
-        return super.formattedName() ~ " " ~ (required ? "<" ~ paramName ~ ">" : "[" ~ paramName ~ "]");
+    /**
+     * Returns formatted name with parameter placeholder.
+     *
+     * Params:
+     *   colors = Whether to use colors.
+     */
+    public string formattedName(bool colors) const nothrow @safe {
+        return super.formattedName() ~ " " ~
+            (colors
+                ? required
+                    ? "<".brightBlack() ~ paramName.dim() ~ ">".brightBlack()
+                    : "[".brightBlack() ~ paramName.dim() ~ "]".brightBlack()
+                : required
+                    ? "<" ~ paramName ~ ">"
+                    : "[" ~ paramName ~ "]"
+            );
     }
 
-    /** Returns formatted name padded with spaces if there is no short option. */
-    public override string paddedName() const nothrow @safe {
-        auto name = formattedName();
+    /** Returns formatted name with parameter placeholder. */
+    public override string formattedName() const nothrow @safe {
+        return formattedName(false);
+    }
+
+    /**
+     * Returns formatted name padded with spaces if there is no short option.
+     *
+     * Params:
+     *   colors = Whether to use colors.
+     */
+    public string paddedName(bool colors) const nothrow @safe {
+        auto name = formattedName(colors);
         if (shortName !is null)
             return name;
         else
             return "    " ~ name;
+    }
+    
+    /** Returns formatted name padded with spaces if there is no short option. */
+    public override string paddedName() const nothrow @safe {
+        return paddedName(false);
     }
 
     public override hash_t toHash() const nothrow @safe {
