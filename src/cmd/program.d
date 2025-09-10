@@ -188,12 +188,19 @@ public class Program : Command {
     }
 
     /**
+     * Gets the parsed arguments.
+     */
+    public ParsedArgs parse(string[] args) const {
+        return super.parse(args[1..$], this);
+    }
+
+    /**
      * Runs the program with the given arguments.
      *
      * Params:
      *   args = Command-line arguments array.
      */
-    public noreturn run(string[] args) {
-        exit(super.parse(args[1..$], this));
+    public noreturn run(string[] args) const {
+        exit(super.run(args[1..$], this));
     }
 }

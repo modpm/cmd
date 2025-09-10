@@ -309,7 +309,7 @@ public class Command {
         exit(status);
     }
 
-    package int parse(string[] args, Program program) const {
+    package ParsedArgs parse(const(string[]) args, const(Program) program) const {
         if (!subcommands.empty()) {
             auto index = args.countUntil!(a => a.front() != '-');
             if (index >= 0) {
@@ -330,9 +330,9 @@ public class Command {
             string arg = args[i];
             if (arg.front() == '-') {
                 if (program.versionOption() !is null && program.versionOption().matches(arg))
-                    return program.printVersion();
+                    exit(program.printVersion());
                 if (program.helpOption() !is null && program.helpOption().matches(arg))
-                    return printHelp();
+                    exit(printHelp());
 
                 const(Flag) flag = findFlag(arg);
                 if (flag !is null) {
@@ -409,6 +409,10 @@ public class Command {
             }
         }
 
-        return _action(parsedArgs);
+        return parsedArgs;
+    }
+
+    package int run(const(string[]) args, const(Program) program) const {
+        return _action(parse(args, program));
     }
 }
