@@ -12,10 +12,10 @@ class HelpCommand : Command {
      * Params:
      *   description = Command description.
      */
-    public this(string description = "Show help for command.") {
+    public this(string description = "Show help for command") {
         super("help")
             .description(description)
-            .argument("[command...]", "Command to show help for.")
+            .argument("[command...]", "Command to show help for")
             .action((args) {
                 if (!args.hasArgument("command"))
                     return args.program.printHelp();
