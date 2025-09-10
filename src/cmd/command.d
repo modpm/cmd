@@ -226,7 +226,7 @@ public class Command {
         Appender!string sb;
         sb.put(program.name());
         if (program.versionOption() || program.helpOption())
-            sb.put(" [global options]");
+            sb.put(chain.length > 1 ? " [global options]" : " [options]");
         if (chain.length > 1)
             sb.put(" " ~ chain[1..$].map!(c => c.name()).array.join(" "));
         if (!subcommands.empty())
