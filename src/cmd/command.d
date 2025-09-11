@@ -23,6 +23,8 @@ public class Command {
     package Option[] options;
     package Argument[] arguments;
     package Command[] subcommands;
+
+    /** Chain of commands leading to this command. */
     public Command[] chain = null;
     private int delegate(ParsedArgs) _action;
 
