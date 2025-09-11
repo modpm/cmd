@@ -118,7 +118,7 @@ public final class Option : Flag {
         else
             return "    " ~ name;
     }
-    
+
     /** Returns formatted name padded with spaces if there is no short option. */
     public override string paddedName() const nothrow @safe {
         return paddedName(false);
