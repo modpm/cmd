@@ -40,7 +40,7 @@ public class Section {
         this.title = title;
         this.body = body;
         _terms = terms;
-        longest = !terms.empty() ?terms.map!(t => t[0].stripAnsi().length).maxElement() : 0;
+        longest = !terms.empty() ? terms.map!(t => t[0].stripAnsi().length).maxElement() : 0;
     }
 
     /** Terms and definitions associated with the section. */
