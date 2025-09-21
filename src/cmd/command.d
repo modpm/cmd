@@ -405,7 +405,8 @@ public class Command {
         return parsedArgs;
     }
 
-    package int run(const(string[]) args, const(Program) program) const {
-        return _action(parse(args, program));
+    public int run(const(string[]) args, const(Program) program) const {
+        auto parsed = parse(args, program);
+        return parsed.command._action(parsed);
     }
 }
