@@ -250,7 +250,7 @@ public class Command {
         return colors ? sb.data : sb.data.stripAnsi();
     }
 
-    /** Prinths help for the command. */
+    /** Prints help for the command. */
     public int printHelp() const {
         auto doc = new Document();
         doc.add("Usage:".bold(), usage(true));
