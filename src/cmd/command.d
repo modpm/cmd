@@ -282,8 +282,8 @@ public class Command {
                 return nameA < nameB;
             })) {
                 if (Option o = cast(Option) opt)
-                    s.add(o.paddedName(true), opt.description);
-                else s.add(opt.paddedName(), opt.description);
+                    s.add(o.formattedName(colors: true, padded: true), opt.description);
+                else s.add(opt.formattedName(padded: true), opt.description);
             }
         }
 

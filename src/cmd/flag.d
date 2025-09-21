@@ -75,18 +75,15 @@ public class Flag {
         return new Flag(shortOpt, longOpt, description);
     }
 
-    /** Returns formatted name, e.g., `-h, --help`. */
-    public string formattedName() const nothrow @safe {
-        return "" ~ (shortName !is null ? "-" ~ shortName : "")
+    /**
+     * Returns formatted name, e.g., `-h, --help`.
+     *
+     * Params:
+     *   padded = Whether to add spaces at the start if there is no short option.
+     */
+    public string formattedName(bool padded = false) const nothrow @safe {
+        return "" ~ (shortName !is null ? "-" ~ shortName : (padded ? PADDING_MISSING_SHORT : ""))
             ~ (longName !is null ? (shortName !is null ? ", " : "") ~ "--" ~ longName : "");
-    }
-
-    /** Returns formatted name padded with spaces if there is no short option. */
-    public string paddedName() const nothrow @safe {
-        auto name = formattedName();
-        return shortName is null
-            ? PADDING_MISSING_SHORT ~ name
-            : name;
     }
 
     /**

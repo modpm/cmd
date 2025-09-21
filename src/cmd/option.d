@@ -83,13 +83,14 @@ public final class Option : Flag {
     }
 
     /**
-     * Returns formatted name with parameter placeholder.
+     * Returns formatted name with parameter placeholder, e.g., `-f, --foo <val>`.
      *
      * Params:
+     *   padded = Whether to add spaces at the start if there is no short option.
      *   colors = Whether to use colors.
      */
-    public string formattedName(bool colors) const nothrow @safe {
-        return super.formattedName() ~ " " ~
+    public string formattedName(bool colors, bool padded = false) const nothrow @safe {
+        return super.formattedName(padded) ~ " " ~
             (colors
                 ? required
                     ? "<".brightBlack() ~ paramName.dim() ~ ">".brightBlack()
@@ -100,27 +101,14 @@ public final class Option : Flag {
             );
     }
 
-    /** Returns formatted name with parameter placeholder. */
-    public override string formattedName() const nothrow @safe {
-        return formattedName(false);
-    }
-
     /**
-     * Returns formatted name padded with spaces if there is no short option.
+     * Returns formatted name with parameter placeholder, e.g., `-f, --foo <val>`.
      *
      * Params:
-     *   colors = Whether to use colors.
+     *   padded = Whether to add spaces at the start if there is no short option.
      */
-    public string paddedName(bool colors) const nothrow @safe {
-        auto name = formattedName(colors);
-        return shortName is null
-            ? PADDING_MISSING_SHORT ~ name
-            : name;
-    }
-
-    /** Returns formatted name padded with spaces if there is no short option. */
-    public override string paddedName() const nothrow @safe {
-        return paddedName(false);
+    public override string formattedName(bool padded = false) const nothrow @safe {
+        return formattedName(colors: false, padded: padded);
     }
 
     public override hash_t toHash() const nothrow @safe {
