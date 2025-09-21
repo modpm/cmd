@@ -113,10 +113,9 @@ public final class Option : Flag {
      */
     public string paddedName(bool colors) const nothrow @safe {
         auto name = formattedName(colors);
-        if (shortName !is null)
-            return name;
-        else
-            return "    " ~ name;
+        return shortName is null
+            ? PADDING_MISSING_SHORT ~ name
+            : name;
     }
 
     /** Returns formatted name padded with spaces if there is no short option. */

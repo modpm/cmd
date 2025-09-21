@@ -17,6 +17,14 @@ public class Flag {
     public const string description;
 
     /**
+     * Placeholder for padding when there is no short option.
+     *
+     * 4 spaces as placeholder for: minus (`-`) + any letter (`a`) + comma (`,`) + space (` `)
+     * Example: `-a, ` (4 characters)
+     */
+    public static const enum PADDING_MISSING_SHORT = "    ";
+
+    /**
      * Constructs a flag.
      *
      * Params:
@@ -76,10 +84,9 @@ public class Flag {
     /** Returns formatted name padded with spaces if there is no short option. */
     public string paddedName() const nothrow @safe {
         auto name = formattedName();
-        if (shortName !is null)
-            return name;
-        else
-            return "    " ~ name;
+        return shortName is null
+            ? PADDING_MISSING_SHORT ~ name
+            : name;
     }
 
     /**
