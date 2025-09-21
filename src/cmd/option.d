@@ -86,8 +86,8 @@ public final class Option : Flag {
      * Returns formatted name with parameter placeholder, e.g., `-f, --foo <val>`.
      *
      * Params:
-     *   padded = Whether to add spaces at the start if there is no short option.
      *   colors = Whether to use colors.
+     *   padded = Whether to add spaces at the start if there is no short option.
      */
     public string formattedName(bool colors, bool padded = false) const nothrow @safe {
         return super.formattedName(padded) ~ " " ~
