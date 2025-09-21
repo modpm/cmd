@@ -37,7 +37,7 @@ public class Flag {
      */
     public this(string shortName, string longName, string description) @safe {
         assert(shortName is null || shortName.length == 1, "Short name must be a single character");
-        assert(longName is null || longName.length > 0, "Long name must be non-empty");
+        assert(longName is null || !longName.empty(), "Long name must be non-empty");
         assert(shortName !is null || longName !is null, "At least one of shortName or longName must be provided");
 
         this.shortName = shortName;

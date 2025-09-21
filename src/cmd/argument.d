@@ -35,7 +35,7 @@ public class Argument {
      *   AssertionError if name is empty, or if argument is required and default value is not `null`.
      */
     public this(string name, bool required, bool variadic, string description, string defaultValue = null) @safe {
-        assert(name.length > 0, "Argument name must be non-empty");
+        assert(!name.empty(), "Argument name must be non-empty");
         if (required)
             assert(defaultValue is null, "Required argument cannot have a default value");
         this.name = name;

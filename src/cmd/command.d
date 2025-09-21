@@ -38,7 +38,7 @@ public class Command {
      *   AssertionError if the name is empty.
      */
     public this(string name) @safe {
-        assert(name.length > 0, "Command name must be non-empty");
+        assert(!name.empty(), "Command name must be non-empty");
         this._name = name;
         this._action = (args) => args.command.printHelp();
     }
