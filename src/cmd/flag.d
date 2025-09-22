@@ -82,8 +82,15 @@ public class Flag {
      *   padded = Whether to add spaces at the start if there is no short option.
      */
     public string formattedName(bool padded = false) const nothrow @safe {
-        return "" ~ (shortName !is null ? "-" ~ shortName : (padded ? PADDING_MISSING_SHORT : ""))
-            ~ (longName !is null ? (shortName !is null ? ", " : "") ~ "--" ~ longName : "");
+        return ""
+            ~ (shortName !is null
+                ? "-" ~ shortName
+                : (padded ? PADDING_MISSING_SHORT : "")
+            )
+            ~ (longName !is null
+                ? (shortName !is null ? ", " : "") ~ "--" ~ longName
+                : ""
+            );
     }
 
     /**
