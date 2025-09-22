@@ -32,13 +32,13 @@ public final class Option : Flag {
      */
     public this(string shortName, string longName, string paramName, string description, bool required,
         string defaultValue = null) @safe {
+        if (required)
+            assert(defaultValue is null, "Required option cannot have a default value");
+                    
         super(shortName, longName, description);
         this.paramName = paramName;
         this.required = required;
         this.defaultValue = defaultValue;
-
-        if (required)
-            assert(defaultValue is null, "Required option cannot have a default value");
     }
 
     /**
