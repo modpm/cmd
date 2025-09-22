@@ -17,8 +17,8 @@ import cmd.program;
 
 /** Represents a command-line command. */
 public class Command {
-    private const string _name;
-    private string _description;
+    private const string nameStr;
+    private string descriptionStr;
     package Flag[] flags;
     package Option[] options;
     package Argument[] arguments;
@@ -26,7 +26,7 @@ public class Command {
 
     /** Chain of commands leading to this command. */
     public Command[] chain = null;
-    private int delegate(ParsedArgs) _action;
+    private int delegate(ParsedArgs) actionDg;
 
     /**
      * Constructs a new command with the given name.
@@ -39,24 +39,24 @@ public class Command {
      */
     public this(string name) @safe {
         assert(!name.empty(), "Command name must be non-empty");
-        this._name = name;
-        this._action = (args) => args.command.printHelp();
+        this.nameStr = name;
+        this.actionDg = (args) => args.command.printHelp();
     }
 
     /** Gets the name of the command. */
     public string name() const nothrow @safe {
-        return this._name;
+        return this.nameStr;
     }
 
     /** Sets the description of the command */
     public Command description(string description) nothrow @safe {
-        this._description = description;
+        this.descriptionStr = description;
         return this;
     }
 
     /** Gets the description of the command */
     public string description() const nothrow @safe {
-        return this._description;
+        return this.descriptionStr;
     }
 
     /**
@@ -211,7 +211,7 @@ public class Command {
      *   action = Delegate to execute when command runs.
      */
     public Command action(int delegate(ParsedArgs) action) nothrow @safe {
-        this._action = action;
+        this.actionDg = action;
         return this;
     }
 
@@ -407,6 +407,6 @@ public class Command {
 
     public int run(const(string[]) args, const(Program) program) const {
         auto parsed = parse(args, program);
-        return parsed.command._action(parsed);
+        return parsed.command.actionDg(parsed);
     }
 }

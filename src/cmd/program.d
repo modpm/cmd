@@ -13,8 +13,8 @@ import cmd.parsed_args;
 /** Represents a command-line program. */
 public class Program : Command {
     private string versionStr;
-    private Flag _versionOption;
-    private Flag _helpOption;
+    private Flag versionOptionFlag;
+    private Flag helpOptionFlag;
 
     /**
      * Constructs a new program with the given name.
@@ -44,7 +44,7 @@ public class Program : Command {
     /** Sets the version flag for the program and enables getting the version with it. */
     public Program versionOption(Flag flag) @safe {
         assert(versionStr !is null, "Version is not set");
-        _versionOption = flag;
+        versionOptionFlag = flag;
         flags ~= flag;
         return this;
     }
@@ -56,7 +56,7 @@ public class Program : Command {
 
     /** Gets the version flag for the program. */
     public const(Flag) versionOption() const nothrow @safe {
-        return _versionOption;
+        return versionOptionFlag;
     }
 
     /** Prints the version and returns 0. */
@@ -74,14 +74,14 @@ public class Program : Command {
 
     /** Sets the help flag for the program and enables getting command help with it. */
     public Program helpOption(Flag flag) nothrow @safe {
-        _helpOption = flag;
+        helpOptionFlag = flag;
         flags ~= flag;
         return this;
     }
 
     /** Gets the help flag for the program. */
     public const(Flag) helpOption() const nothrow @safe {
-        return _helpOption;
+        return helpOptionFlag;
     }
 
     /** Sets the description of the command */

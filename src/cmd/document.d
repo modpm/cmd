@@ -20,7 +20,7 @@ public class Section {
     public const string body;
 
     /** Terms and definitions associated with the section. */
-    protected Term[] _terms;
+    protected Term[] termsList;
 
     /** The length of the longest term. */
     protected size_t longest = 0;
@@ -39,18 +39,18 @@ public class Section {
         assert(title !is null, "Section title cannot be null");
         this.title = title;
         this.body = body;
-        _terms = terms;
+        termsList = terms;
         longest = !terms.empty() ? terms.map!(t => t[0].stripAnsi().length).maxElement() : 0;
     }
 
     /** Terms and definitions associated with the section. */
     public const(Term[]) terms() const nothrow @safe {
-        return _terms;
+        return termsList;
     }
 
     /** Adds a term to the section. */
     public Section add(Term term) @safe {
-        _terms ~= term;
+        termsList ~= term;
         longest = max(longest, term[0].stripAnsi().length);
         return this;
     }
@@ -72,11 +72,11 @@ public class Section {
  */
 public class Document {
     /** Sections associated with this document. */
-    protected Section[] _sections;
+    protected Section[] sectionsList;
 
     /** Constructs a new document. */
     public this() nothrow @safe {
-        _sections = [];
+        sectionsList = [];
     }
 
     /**
@@ -95,12 +95,12 @@ public class Document {
 
     /** Gets the sections associated with this document. */
     public const(Section[]) sections() const nothrow @safe {
-        return _sections;
+        return sectionsList;
     }
 
     /** Adds a section to this document. */
     public Document add(Section section) nothrow @safe {
-        _sections ~= section;
+        sectionsList ~= section;
         return this;
     }
 
@@ -118,7 +118,7 @@ public class Document {
 
     /** Adds a term to a section matching the specified title (ANSI is stripped for matching). */
     public Document add(string section, Term term) @safe {
-        auto sections = _sections.find!(s => s.title.stripAnsi() == section.stripAnsi());
+        auto sections = sectionsList.find!(s => s.title.stripAnsi() == section.stripAnsi());
         assert(!sections.empty(), "Could not find section " ~ section);
         sections.front().add(term);
         return this;
@@ -135,8 +135,8 @@ public class Document {
     public void print() const @safe {
         const longest = sections().empty() ? 0 : sections().map!(s => s.longest).maxElement();
 
-        for (size_t i = 0; i < _sections.length; ++i) {
-            const section = _sections[i];
+        for (size_t i = 0; i < sectionsList.length; ++i) {
+            const section = sectionsList[i];
             writeln(section.title);
             if (section.body !is null)
                 writeln("  " ~ section.body);
@@ -148,7 +148,7 @@ public class Document {
                     ~ term[1]
                 );
             }
-            if (i + 1 < _sections.length)
+            if (i + 1 < sectionsList.length)
                 writeln();
         }
     }
