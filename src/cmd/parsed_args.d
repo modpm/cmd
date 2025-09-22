@@ -81,7 +81,7 @@ public final class ParsedArgs {
         if (name in arguments)
             return true;
 
-        if (variadic.empty())
+        if (variadic is null || variadic.empty())
             return false;
 
         foreach (arg; command.arguments)
@@ -106,7 +106,7 @@ public final class ParsedArgs {
         if (auto p = name in arguments)
             return [*p];
 
-        if (!variadic.empty())
+        if (variadic !is null && !variadic.empty())
             foreach (arg; command.arguments)
                 if (arg.name == name && arg.variadic)
                     return variadic;
@@ -135,7 +135,7 @@ public final class ParsedArgs {
     }
 
     package void setArgumentList(string[] values) @safe {
-        assert(variadic.empty(), "Argument list already set");
+        assert(variadic is null || variadic.empty(), "Argument list already set");
         variadic = values;
     }
 }
