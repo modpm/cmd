@@ -254,6 +254,9 @@ public class Command {
     public int printHelp() const {
         auto doc = new Document();
         doc.add("Usage:".bold(), usage(true));
+        
+        if (descriptionStr !is null)
+            doc.add("Description:".bold(), descriptionStr);
 
         if (subcommands !is null) {
             auto s = new Section("Commands:".bold());
