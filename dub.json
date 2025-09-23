@@ -1,0 +1,11 @@
+{
+	"authors": [
+		"Zefir Kirilov"
+	],
+	"copyright": "Copyright © 2025 Zefir Kirilov",
+	"description": "Simple, intuitive library for building CLI applications in D.",
+	"license": "GPL-3.0-only",
+	"name": "cmd",
+	"sourcePaths": ["src"],
+	"targetType": "library"
+}
