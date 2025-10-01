@@ -1,0 +1,9 @@
+{
+	"dependencies": {
+		"cmd": "~>0.1.0"
+	},
+	"description": "cmd examples",
+	"name": "examples",
+	"sourcePaths": ["."],
+	"targetType": "none"
+}

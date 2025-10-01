@@ -4,26 +4,26 @@
 [![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github)](https://github.com/modpm/cmd)
 [![CI](https://github.com/modpm/cmd/actions/workflows/build.yaml/badge.svg)](https://github.com/modpm/cmd/actions/workflows/build.yaml)
 [![Version](https://img.shields.io/dub/v/cmd)](https://code.dlang.org/packages/cmd)
-[![Licence](https://img.shields.io/dub/l/cmd)](https://code.dlang.org/packages/cmd)
+[![Licence](https://img.shields.io/dub/l/cmd)](https://github.com/modpm/cmd/blob/main/COPYING)
 [![Score](https://img.shields.io/dub/score/cmd)](https://code.dlang.org/packages/cmd)
 [![Downloads](https://img.shields.io/dub/dt/cmd)](https://code.dlang.org/packages/cmd)
 
-Simple, intuitive library for building CLI applications in D.
+A simple, intuitive library for building CLI applications in D.
 
-Please see the [API Reference Documentation](https://modpm.github.io/cmd).
+**[API Reference Documentation](https://modpm.github.io/cmd)**
 
-## Highlights
+## Features
 
-- Nested subcommands (commands may contain other commands).
-- Required (`<>`) and optional (`[]`) arguments and options.
-- Variadic arguments (`...`) for accepting multiple values.
-- Built-in help and usage generation.
-- Accepts `--option=value` and `--option value` forms.
-- Repeated options are collected as arrays.
+- **Nested subcommands** — Supports hierarchical command structures, allowing commands to contain other commands.
+- **Flexible arguments** — Required (`<>`) and optional (`[]`) arguments with variadic support (`...`).
+- **Rich option handling** — Supports `--option=value` and `--option value` forms.
+- **Automatic help generation** — Built-in help and usage text generation.
+- **Array collection** — Repeated options are automatically collected as arrays.
+- **Type-safe parsing** — Clean API for accessing parsed arguments and options.
 
-## Quick start
+## Quick Start
 
-A minimal example that splits a string.
+Here’s a minimal example that splits a string:
 
 ```d
 import std.stdio;
@@ -51,29 +51,142 @@ void main(string[] argv)
 }
 ```
 
-> [!NOTE]
->
-> `versionOption` enables a version flag for your program (e.g., `--version`), and helpOption enables a help flag
-> (e.g., `-h` or `--help`). When specified, these flags are handled automatically:
-> the library will print the version or help message and exit.
+### Usage
 
-## Subcommands
+```bash
+$ ./split "hello,world,foo" --separator ","
+["hello", "world", "foo"]
 
-Add subcommands with .command(); subcommands may themselves have nested subcommands. Example with a single subcommand:
+$ ./split "hello,world,foo" --separator "," --first
+hello
+```
+
+**Note:** [`versionOption()`](https://modpm.github.io/cmd/cmd.program.Program.versionOption.2.html) enables a version flag for your program (e.g., `--version`), and [`helpOption()`](https://modpm.github.io/cmd/cmd.program.Program.helpOption.1.html) enables a help flag (e.g., `-h` or `--help`). When specified, these flags are handled automatically: the library will print the version or help message and exit.
+
+## Options and Flags
+
+Use [`option()`](https://modpm.github.io/cmd/cmd.command.Command.option.html) to add named parameters to your commands:
+
+### Option Types
+
+```d
+ParsedArgs args = new Program("example")
+    // Required option - user must provide a value
+    .option("-t, --target <name>", "Target name")
+
+    // Optional with default value
+    .option("-p, --port [number]", "Port number", "8080")
+
+    // Optional without default
+    .option("-c, --config [file]", "Configuration file")
+
+    // Boolean flag - without a parameter
+    .option("--verbose", "Enable verbose output")
+    .option("-q, --quiet", "Suppress output")
+
+    .parse(argv);
+```
+
+### Accessing Values
+
+Please see the API reference page for [`ParsedArgs`](https://modpm.github.io/cmd/cmd.parsed_args.ParsedArgs.html).
+
+```d
+// Get option value (first occurrence)
+const string target = args.option("target");
+const string port = args.option("port");
+
+
+// Get all values for repeated options
+// const string[] targets = args.optionList("target");
+
+// Check if optional option is present
+if (args.hasOption("--config")) {
+    const string config = args.option("--config");
+    // ...
+}
+
+// Check boolean flags
+if (args.flag("verbose"))
+    writeln("Verbose mode enabled");
+const bool quiet = args.flag("-q");
+```
+
+You can access options using:
+- `option("target")` - access by long name (explicit for long names)
+- `option("t")` - access by short name (implicit, could be ambiguous)
+- `option("-t")` - access by short name (explicit)
+- `option("--target")` - access by long name (explicit, stylistic)
+
+(also applies for `hasOption()`, `flag()`, etc.)
+
+## Arguments
+
+Use [`argument()`](https://modpm.github.io/cmd/cmd.command.Command.argument.html) to add positional arguments that users provide in order:
+
+```d
+new Program("file-processor")
+    .argument("<input>", "Input file path")    // Required
+    .argument("[output]", "Output file path")  // Optional
+```
+
+### Variadic Arguments
+
+Variadic (rest) arguments can be added as the last argument in your command to accept multiple values. Optional variadic `[files...]` accepts ≥ 0 values, required variadic `<files...>` needs ≥ 1.
+
+```d
+new Program("search")
+    // …
+    .argument("<files...>", "Files to search")
+```
+
+### Accessing Arguments
+```d
+const string inputFile = args.argument("input");
+
+// Check if optional argument was provided
+if (args.hasArgument("output")) {
+    const string outputFile = args.argument("output");
+}
+
+// Get all values of variadic
+const string[] files = args.argumentList("files");
+```
+
+
+**Note:** Required arguments after optional ones are technically allowed, but behave counter-intuitively and ambiguously for the user. It is strongly recommended not to use optional positional arguments before required ones—consider re-ordering the arguments, or using named parameters (options).
+
+## Working with Subcommands
+
+Build complex CLI applications with nested subcommands using [`command()`](https://modpm.github.io/cmd/cmd.command.Command.command.html). Here’s an example with basic subcommands.
 
 ```d
 import std.stdio;
+import std.string;
+
 import cmd.program;
+import cmd.command;
 
 void main(string[] args)
 {
-    new Program("example")
-        .description("An example CLI program using cmd")
+    new Program("subcommands")
+        .description("A CLI application with subcommands")
+        .versionString("1.0.0")
         .helpOption("-h, --help", "Show help for command")
+        .command(new Command("split")
+            .description("Split a string")
+            .argument("<string>", "String to split")
+            .option("-s, --separator <char>", "Separator character")
+            .action((args) {
+                auto parts = args.argument("string").split(args.option("separator"));
+                writeln(parts);
+                return 0;
+            })
+        )
         .command(new Command("greet")
             .description("Greet someone")
-            .option("--excited", "Add excitement to the greeting")
             .argument("<name>", "Name of the person to greet")
+            .option("--excited", "Add excitement to the greeting")
             .action((args) {
                 auto msg = "Hello, " ~ args.argument("name");
                 if (args.flag("excited"))
@@ -86,69 +199,29 @@ void main(string[] args)
 }
 ```
 
-Invoke as: `example greet [options] <name>`.
+### Usage
 
-> [!IMPORTANT]
->
-> A command cannot have both subcommands and arguments.
-
-## Flags and options
-
-Use `.option()` to add options or flags to a command.
-
-- Options require a parameter.
-- Make an option required by wrapping the parameter name in `<>`, e.g. --target `<target>`.
-- Make an option optional by wrapping it in `[]`. A default value can be provided for optional options.
-- An option with no parameter is a flag; flags are boolean and indicate presence.
-- Options and flags may have a short name (`-x`), a long name (`--example`), or both (`-x, --example`).
-
-Example:
-
-```d
-auto args = new Program("example")
-    .option("-f, --foo <param>", "Option with a required parameterer")
-    .option("-b [bar]", "Option with an optional parameter and default value", "defaultValue")
-    .option("--flag", "A boolean flag")
-    .parse(argv);
+```bash
+$ ./subcommands split "hello,world" --separator ","
+$ ./subcommands greet Alice --excited
+$ ./subcommands split --help  # Shows help for the split subcommand
 ```
 
-Use `args.hasOption(name)` to check if an optional option without a default value is present before accessing it.
-To get the first value of an option, use `args.option(name)`. To get all values, use `args.optionList(name)`.
+**Important:** A command cannot have both subcommands and arguments. Choose one pattern per command level.
 
-To check a flag, use `args.flag(name)`.
+Commands can be nested endlessly.
 
-> [!NOTE]
->
-> `name` can be either the short or long name. For explicitness, you can prefix with a single or double dash,
-> e.g. `args.option("-o")` or `args.option("--option")`.
+## Custom Command Classes
 
-## Arguments
-
-Define positional arguments with `.argument()`.
-
-- Required positional arguments are wrapped in `<>`.
-- Optional positional arguments are wrapped in `[]`.
-- A variadic (rest) argument is expressed with `...` and if used must be the final argument.
-  A required variadic argument requires at least one value; an optional variadic argument accepts zero or more.
-
-Example:
+Create modular command implementations by extending [`Command`](https://modpm.github.io/cmd/cmd.command.Command.html) (or [`Program`](https://modpm.github.io/cmd/cmd.program.Program.html)):
 
 ```d
-new Program("example")
-    .argument("<input>", "Input string or value")
-    .argument("[output]", "Optional output string or value")
-    .argument("<items...>", "One or more items to process")
-```
-
-## Custom command classes
-
-Create modular command implementations by extending `Command`:
-
-```d
-module example.greet_command;
+module modular.commands.greet;
 
 import std.stdio;
+
 import cmd.command;
+import cmd.parsed_args;
 
 class GreetCommand : Command
 {
@@ -156,32 +229,89 @@ class GreetCommand : Command
     {
         super("greet")
             .description("Greet someone")
-            .option("--excited", "Add excitement to the greeting")
             .argument("<name>", "Name of the person to greet")
-            .action((args) {
-                auto msg = "Hello, " ~ args.argument("name");
-                if (args.flag("excited"))
-                    msg ~= "!!!";
-                writeln(msg);
-                return 0;
-            });
+            .option("--excited", "Add excitement to the greeting")
+            .action(&execute);
+    }
+
+    private int execute(ParsedArgs args)
+    {
+        auto msg = "Hello, " ~ args.argument("name");
+        if (args.flag("excited"))
+            msg ~= "!!!";
+        writeln(msg);
+        return 0;
     }
 }
 ```
 
-To attach it as a subcommand: `.command(new GreetCommand())`.
-
-# Built-in help command
-
-`HelpCommand` is included to enable `help` as a subcommand:
-
+### Integration
 ```d
-new Program("example")
-    .command(new HelpCommand())
+// …
+import modular.commands.greet;
+import cmd.program;
+
+void main(string[] args)
+{
+    new Program("modular")
+        .command(new GreetCommand())
+        .run(args);
+}
 ```
 
-Usage: `help [command...]`
+## Built-in Help Command
 
-Examples:
-- `example help` — show help for the program.
-- `example help greet` — show help for the `greet` subcommand.
+Enable `help` as a subcommand using [`HelpCommand`](https://modpm.github.io/cmd/cmd.help_command.HelpCommand.html):
+
+```d
+// …
+import cmd.help_command;
+
+new Program("myapp")
+    .description("My CLI application")
+    .command(new Command("deploy").description("Deploy the application"))
+    .command(new Command("status").description("Check application status"))
+    .command(new HelpCommand())  // Adds the built-in ‘help’ subcommand
+    .run(args);
+```
+
+### Usage
+
+```bash
+$ myapp help         # Show help for program
+$ myapp help deploy  # Show help for deploy command
+```
+
+## Error Handling
+
+The library provides clear error messages for common mistakes during args parsing and exits with status code `2`:
+
+```
+error: unknown command 'unknown-command'
+error: missing value for option 'target'
+error: unknown option 'invalid-option'
+error: unexpected argument 'extra'
+error: missing required option '-t, --target <name>'
+error: missing required argument 'input'
+```
+
+You can also trigger custom errors in your command actions using the [`error(string)`](https://modpm.github.io/cmd/cmd.command.Command.error.1.html) and [`noreturn error(string, int)`](https://modpm.github.io/cmd/cmd.command.Command.error.2.html) methods on `Command`:
+
+```d
+.action((args) {
+    if (someCondition) {
+        args.command.error("error message");     // Does not exit (only prints error)
+        // or
+        args.command.error("error message", 1);  // Exits with status
+    }
+    return 0;
+});
+```
+
+The `error` methods can be overridden to customise the error format.
+
+## Licence
+
+Copyright © 2025 Zefir Kirilov.
+
+This project is licenced under the [GPL-3.0](https://github.com/modpm/cmd/blob/main/COPYING) licence.
