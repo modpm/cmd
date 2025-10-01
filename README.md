@@ -218,12 +218,10 @@ Create modular command implementations by extending [`Command`](https://modpm.gi
 ```d
 module modular.commands.greet;
 
-import std.conv;
 import std.stdio;
 
 import cmd.command;
 import cmd.parsed_args;
-import cmd.program;
 
 class GreetCommand : Command
 {
@@ -251,10 +249,14 @@ class GreetCommand : Command
 ```d
 // …
 import modular.commands.greet;
+import cmd.program;
 
-new Program("modular")
-    .command(new GreetCommand())
-    .run(args);
+void main(string[] args)
+{
+    new Program("modular")
+        .command(new GreetCommand())
+        .run(args);
+}
 ```
 
 ## Built-in Help Command

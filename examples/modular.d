@@ -1,11 +1,9 @@
 module modular.commands.greet;
 
-import std.conv;
 import std.stdio;
 
 import cmd.command;
 import cmd.parsed_args;
-import cmd.program;
 
 class GreetCommand : Command
 {
@@ -29,6 +27,7 @@ class GreetCommand : Command
 }
 
 import modular.commands.greet;
+import cmd.program;
 
 void main(string[] args)
 {
