@@ -15,7 +15,7 @@ jobs:
       pages: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up D compiler
         uses: dlang-community/setup-dlang@v2
