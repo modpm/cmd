@@ -254,7 +254,7 @@ public class Command {
     public int printHelp() const {
         auto doc = new Document();
         doc.add("Usage:".bold(), usage(true));
-        
+
         if (descriptionStr !is null)
             doc.add("Description:".bold(), descriptionStr);
 
@@ -330,6 +330,22 @@ public class Command {
                 if (program.helpOption() !is null && program.helpOption().matches(arg))
                     exit(printHelp());
 
+                if (arg.length > 2 && arg[0] == '-' && arg[1] != '-') {
+                    foreach (c; arg[1 .. $]) {
+                        const shortArg = "-" ~ c;
+                        const(Flag) f = findFlag(shortArg);
+                        if (f !is null) {
+                            parsedArgs.setFlag(f);
+                            continue;
+                        }
+                        const(Option) opt = findOption(shortArg);
+                        if (opt !is null)
+                            error("missing value for option '" ~ shortArg ~ "'", 2);
+                        program.error("unknown option '" ~ shortArg ~ "'", 2);
+                    }
+                    continue;
+                }
+
                 const(Flag) flag = findFlag(arg);
                 if (flag !is null) {
                     parsedArgs.setFlag(flag);
@@ -342,7 +358,7 @@ public class Command {
                 if (option !is null) {
                     string value;
                     if (equalsIndex >= 0)
-                        value =arg[equalsIndex + 1..$];
+                        value = arg[equalsIndex + 1..$];
                     else if (i + 1 < args.length)
                         value = args[++i];
                     else

@@ -10,13 +10,14 @@
 
 A simple, intuitive library for building CLI applications in D.
 
-**[API Reference Documentation](https://modpm.github.io/cmd)**
+[**API Reference Documentation**](https://modpm.github.io/cmd)
 
 ## Features
 
 - **Nested subcommands** — Supports hierarchical command structures, allowing commands to contain other commands.
 - **Flexible arguments** — Required (`<>`) and optional (`[]`) arguments with variadic support (`...`).
-- **Rich option handling** — Supports `--option=value` and `--option value` forms.
+- **Rich option handling** — Supports `--option=value`, `--option value`, and grouped short flags such as `-abc`
+(equivalent to `-a -b -c`).
 - **Automatic help generation** — Built-in help and usage text generation.
 - **Array collection** — Repeated options are automatically collected as arrays.
 - **Type-safe parsing** — Clean API for accessing parsed arguments and options.
