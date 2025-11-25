@@ -331,7 +331,7 @@ public class Command {
                 if (program.helpOption() !is null && program.helpOption().matches(arg))
                     exit(printHelp());
 
-                if (arg.length > 2 && arg[0] == '-' && arg[1] != '-') {
+                if (arg.length > 2 && arg[0] == '-' && arg[1] != '-' && arg[2] != '=') {
                     foreach (c; arg[1 .. $]) {
                         const shortArg = "-" ~ c;
                         const(Flag) f = findFlag(shortArg);
