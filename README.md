@@ -45,7 +45,7 @@ void main(string[] argv)
         .parse(argv);
 
     auto parts = args.argument("string").split(args.option("separator"));
-    if (args.flag("first"))
+    if (args.hasFlag("first"))
         writeln(parts[0]);
     else
         writeln(parts);
@@ -108,7 +108,7 @@ if (args.hasOption("--config")) {
 }
 
 // Check boolean flags
-if (args.flag("verbose"))
+if (args.hasFlag("verbose"))
     writeln("Verbose mode enabled");
 const bool quiet = args.flag("-q");
 ```
@@ -190,7 +190,7 @@ void main(string[] args)
             .option("--excited", "Add excitement to the greeting")
             .action((args) {
                 auto msg = "Hello, " ~ args.argument("name");
-                if (args.flag("excited"))
+                if (args.hasFlag("excited"))
                     msg ~= "!!!";
                 writeln(msg);
                 return 0;
@@ -238,7 +238,7 @@ class GreetCommand : Command
     private int execute(ParsedArgs args)
     {
         auto msg = "Hello, " ~ args.argument("name");
-        if (args.flag("excited"))
+        if (args.hasFlag("excited"))
             msg ~= "!!!";
         writeln(msg);
         return 0;

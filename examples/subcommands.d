@@ -26,7 +26,7 @@ void main(string[] args)
             .option("--excited", "Add excitement to the greeting")
             .action((args) {
                 auto msg = "Hello, " ~ args.argument("name");
-                if (args.flag("excited"))
+                if (args.hasFlag("excited"))
                     msg ~= "!!!";
                 writeln(msg);
                 return 0;

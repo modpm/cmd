@@ -27,7 +27,7 @@ public final class ParsedArgs {
     }
 
     /** Checks whether the given flag name is present. */
-    public bool flag(string name) const nothrow @safe {
+    public bool hasFlag(string name) const nothrow @safe {
         foreach (prefix; ["", "-", "--"])
             if (auto p = prefix ~ name in flags)
                 return *p;
@@ -35,10 +35,10 @@ public final class ParsedArgs {
     }
 
     /** Checks whether the given flag is present. */
-    public bool flag(Flag flag) const nothrow @safe {
+    public bool hasFlag(Flag flag) const nothrow @safe {
         if (flag.longName !is null)
-            return this.flag("--" ~ flag.longName);
-        return this.flag("-" ~ flag.shortName);
+            return this.hasFlag("--" ~ flag.longName);
+        return this.hasFlag("-" ~ flag.shortName);
     }
 
     /** Checks whether an option with the given name is present. */
