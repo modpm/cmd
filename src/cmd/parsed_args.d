@@ -124,9 +124,9 @@ public final class ParsedArgs {
 
     package void setFlag(const(Flag) flag, bool value = true) nothrow @safe {
         if (flag.longName !is null)
-            flags[flag.longName] = value;
+            flags["--" ~ flag.longName] = value;
         if (flag.shortName !is null)
-            flags[flag.shortName] = value;
+            flags["-" ~ flag.shortName] = value;
     }
 
     package void setArgument(const(Argument) argument, string value) @safe {
