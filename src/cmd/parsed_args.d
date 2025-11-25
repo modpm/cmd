@@ -16,7 +16,7 @@ public final class ParsedArgs {
     /** Program associated with the parsed arguments. */
     public const(Program) program;
 
-    private bool[string] flags;
+    private uint[string] flags;
     private string[][string] options;
     private string[string] arguments;
     package string[] variadic;
@@ -30,7 +30,7 @@ public final class ParsedArgs {
     public bool hasFlag(string name) const nothrow @safe {
         foreach (prefix; ["", "-", "--"])
             if (auto p = prefix ~ name in flags)
-                return *p;
+                return *p > 0;
         return false;
     }
 
@@ -39,6 +39,22 @@ public final class ParsedArgs {
         if (flag.longName !is null)
             return this.hasFlag("--" ~ flag.longName);
         return this.hasFlag("-" ~ flag.shortName);
+    }
+    
+    /** Returns the number of times the flag with the given name was passed. */
+    public uint flag(string name) const nothrow @safe {
+        foreach (prefix; ["", "-", "--"]) {
+            if (auto p = prefix ~ name in flags)
+                return *p;
+        }
+        return 0;
+    }
+    
+    /** Returns the number of times the given flag was passed. */
+    public uint flag(const(Flag) flag) const nothrow @safe {
+        if (flag.longName !is null)
+            return this.flag("--" ~ flag.longName);
+        return this.flag("-" ~ flag.shortName);
     }
 
     /** Checks whether an option with the given name is present. */
@@ -122,11 +138,11 @@ public final class ParsedArgs {
             options["-" ~ option.shortName] = values;
     }
 
-    package void setFlag(const(Flag) flag, bool value = true) nothrow @safe {
+    package void setFlag(const(Flag) flag) @safe {
         if (flag.longName !is null)
-            flags["--" ~ flag.longName] = value;
+            flags["--" ~ flag.longName] = flags.get("--" ~ flag.longName, 0) + 1;
         if (flag.shortName !is null)
-            flags["-" ~ flag.shortName] = value;
+            flags["-" ~ flag.shortName] = flags.get("-" ~ flag.shortName, 0) + 1;
     }
 
     package void setArgument(const(Argument) argument, string value) @safe {
