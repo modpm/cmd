@@ -307,7 +307,7 @@ public class Command {
 
     package ParsedArgs parse(const(string[]) args, const(Program) program) const {
         if (!subcommands.empty()) {
-            auto index = args.countUntil!(a => a.front() != '-');
+            auto index = args.countUntil!(a => !a.empty() && a.front() != '-');
             if (index >= 0) {
                 const(Command) cmd = findCommand(args[index]);
                 if (cmd is null)
@@ -324,7 +324,7 @@ public class Command {
 
         for (size_t i = 0; i < args.length; ++i) {
             string arg = args[i];
-            if (arg.front() == '-') {
+            if (!arg.empty() && arg.front() == '-') {
                 if (program.versionOption() !is null && program.versionOption().matches(arg))
                     exit(program.printVersion());
                 if (program.helpOption() !is null && program.helpOption().matches(arg))
