@@ -110,7 +110,7 @@ if (args.hasOption("--config")) {
 // Check boolean flags
 if (args.hasFlag("verbose"))
     writeln("Verbose mode enabled");
-const bool quiet = args.flag("-q");
+const bool quiet = args.hasFlag("-q");
 ```
 
 You can access options using:
@@ -119,7 +119,7 @@ You can access options using:
 - `option("-t")` - access by short name (explicit)
 - `option("--target")` - access by long name (explicit, stylistic)
 
-(also applies for `hasOption()`, `flag()`, etc.)
+(also applies for `hasOption()`, `hasFlag()`, etc.)
 
 ## Arguments
 
