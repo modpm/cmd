@@ -16,7 +16,7 @@ void main(string[] argv)
         .parse(argv);
 
     auto parts = args.argument("string").split(args.option("separator"));
-    if (args.flag("first"))
+    if (args.hasFlag("first"))
         writeln(parts[0]);
     else
         writeln(parts);

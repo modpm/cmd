@@ -321,6 +321,7 @@ public class Command {
 
         string[][const(Option)] parsedOptions = new string[][Option];
         string[] variadic = [];
+        uint[const(Flag)] parsedFlags = new uint[Flag];
 
         for (size_t i = 0; i < args.length; ++i) {
             string arg = args[i];
@@ -335,7 +336,7 @@ public class Command {
                         const shortArg = "-" ~ c;
                         const(Flag) f = findFlag(shortArg);
                         if (f !is null) {
-                            parsedArgs.setFlag(f);
+                            parsedFlags[f] = parsedFlags.get(f, 0) + 1;
                             continue;
                         }
                         const(Option) opt = findOption(shortArg);
@@ -348,7 +349,7 @@ public class Command {
 
                 const(Flag) flag = findFlag(arg);
                 if (flag !is null) {
-                    parsedArgs.setFlag(flag);
+                    parsedFlags[flag] = parsedFlags.get(flag, 0) + 1;
                     continue;
                 }
 
@@ -390,6 +391,10 @@ public class Command {
 
         if (!variadic.empty())
             parsedArgs.setArgumentList(variadic);
+
+        foreach (flag, count; parsedFlags) {
+            parsedArgs.setFlag(flag, count);
+        }
 
         foreach (opt, value; parsedOptions) {
             parsedArgs.setOption(opt, value);
