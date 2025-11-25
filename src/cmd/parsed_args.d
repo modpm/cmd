@@ -138,11 +138,11 @@ public final class ParsedArgs {
             options["-" ~ option.shortName] = values;
     }
 
-    package void setFlag(const(Flag) flag) @safe {
+    package void setFlag(const(Flag) flag, uint count) nothrow @safe {
         if (flag.longName !is null)
-            flags["--" ~ flag.longName] = flags.get("--" ~ flag.longName, 0) + 1;
+            flags["--" ~ flag.longName] = count;
         if (flag.shortName !is null)
-            flags["-" ~ flag.shortName] = flags.get("-" ~ flag.shortName, 0) + 1;
+            flags["-" ~ flag.shortName] = count;
     }
 
     package void setArgument(const(Argument) argument, string value) @safe {
