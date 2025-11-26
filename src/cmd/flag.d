@@ -104,7 +104,7 @@ public class Flag {
             return false;
         return
             (query.startsWith("--") && longName == query[2..$])
-            || (query.startsWith("-") && shortName == query[1..2])
+            || (query.length == 2 && query.startsWith("-") && shortName == query[1..2])
             || query == longName
             || query == shortName;
     }
