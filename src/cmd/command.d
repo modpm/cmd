@@ -330,9 +330,12 @@ public class Command {
                     exit(program.printVersion());
                 if (program.helpOption() !is null && program.helpOption().matches(arg))
                     exit(printHelp());
+                    
+                const auto equalsIndex = arg.indexOf('=');
+                const string optName = equalsIndex >= 0 ? arg[0..equalsIndex] : arg;
 
-                if (arg.length > 2 && arg[0] == '-' && arg[1] != '-' && arg[2] != '=') {
-                    foreach (c; arg[1 .. $]) {
+                if (optName.length > 2 && optName[0] == '-' && optName[1] != '-') {
+                    foreach (c; optName[1..$]) {
                         const shortArg = "-" ~ c;
                         const(Flag) f = findFlag(shortArg);
                         if (f !is null) {
@@ -344,17 +347,19 @@ public class Command {
                             error("missing value for option '" ~ shortArg ~ "'", 2);
                         program.error("unknown option '" ~ shortArg ~ "'", 2);
                     }
+                    if (equalsIndex >= 0)
+                        error("unexpected '=' in combined short options '" ~ optName ~ "'", 2);
                     continue;
                 }
 
-                const(Flag) flag = findFlag(arg);
+                const(Flag) flag = findFlag(optName);
                 if (flag !is null) {
+                    if (equalsIndex >= 0)
+                        error("unexpected '=' for option '" ~ optName ~ "'", 2);
                     parsedFlags[flag] = parsedFlags.get(flag, 0) + 1;
                     continue;
                 }
 
-                const auto equalsIndex = arg.indexOf('=');
-                const string optName = equalsIndex >= 0 ? arg[0..equalsIndex] : arg;
                 const(Option) option = findOption(optName);
                 if (option !is null) {
                     string value;
