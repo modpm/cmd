@@ -2,7 +2,7 @@
 	"authors": [
 		"Zefir Kirilov"
 	],
-	"copyright": "Copyright © 2025 Zefir Kirilov",
+	"copyright": "Copyright © 2025–2026 Zefir Kirilov",
 	"description": "Simple, intuitive library for building CLI applications in D.",
 	"license": "GPL-3.0-only",
 	"name": "cmd",

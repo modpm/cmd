@@ -335,6 +335,6 @@ The `error` methods can be overridden to customise the error format.
 
 ## Licence
 
-Copyright © 2025 Zefir Kirilov.
+Copyright © 2025–2026 Zefir Kirilov.
 
 This project is licenced under the [GPL-3.0](https://github.com/modpm/cmd/blob/main/COPYING) licence.
