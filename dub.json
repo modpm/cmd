@@ -2,6 +2,15 @@
 	"authors": [
 		"Zefir Kirilov"
 	],
+	"configurations": [
+		{
+			"name": "library"
+		},
+		{
+			"name": "unittest",
+			"sourcePaths": ["tests"]
+		}
+	],
 	"copyright": "Copyright © 2025 Zefir Kirilov",
 	"description": "Simple, intuitive library for building CLI applications in D.",
 	"license": "GPL-3.0-only",
