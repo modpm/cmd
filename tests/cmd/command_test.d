@@ -1,7 +1,8 @@
 module cmd.command_test;
 
 import core.exception : AssertError;
-import std.exception : assertNotThrown, assertThrown;
+
+import fluent.asserts;
 
 import cmd.argument;
 import cmd.command;
@@ -12,31 +13,31 @@ import cmd.program;
 import cmd.test_support;
 
 unittest {
-    assertThrown!AssertError(new Command(""));
-    assertThrown!AssertError(new Program(""));
+    expect({ new Command(""); }).to.throwException!AssertError;
+    expect({ new Program(""); }).to.throwException!AssertError;
 }
 
 unittest {
     auto program = new Program("app");
-    assert(program.chain.length == 1);
-    assert(program.chain[0] is program);
-}
-
-unittest {
-    auto program = new Program("app");
-    auto child = new Command("child");
-    assert(child.chain is null);
-    assert(program.add(child) is program);
-    assert(child.chain.length == 2);
-    assert(child.chain[0] is program);
-    assert(child.chain[1] is child);
+    expect(program.chain.length).to.equal(1);
+    expect(program.chain[0] is program).to.equal(true);
 }
 
 unittest {
     auto program = new Program("app");
     auto child = new Command("child");
-    assert(program.command(child) is program);
-    assert(child.chain.length == 2);
+    expect(child.chain).to.beNull;
+    expect(program.add(child) is program).to.equal(true);
+    expect(child.chain.length).to.equal(2);
+    expect(child.chain[0] is program).to.equal(true);
+    expect(child.chain[1] is child).to.equal(true);
+}
+
+unittest {
+    auto program = new Program("app");
+    auto child = new Command("child");
+    expect(program.command(child) is program).to.equal(true);
+    expect(child.chain.length).to.equal(2);
 }
 
 unittest {
@@ -47,21 +48,21 @@ unittest {
     a.add(b);
     auto c = new Command("c");
     b.add(c);
-    assert(b.chain.length == 3);
-    assert(b.chain[0] is program);
-    assert(b.chain[1] is a);
-    assert(b.chain[2] is b);
-    assert(c.chain.length == 4);
-    assert(c.chain[3] is c);
+    expect(b.chain.length).to.equal(3);
+    expect(b.chain[0] is program).to.equal(true);
+    expect(b.chain[1] is a).to.equal(true);
+    expect(b.chain[2] is b).to.equal(true);
+    expect(c.chain.length).to.equal(4);
+    expect(c.chain[3] is c).to.equal(true);
 }
 
 unittest {
     auto program = new Program("app");
     auto child = new Command("child");
     program.add(child);
-    assertThrown!AssertError(program.add(child));
-    assertThrown!AssertError(program.add(new Command("child")));
-    assertNotThrown!AssertError(program.add(new Command("other")));
+    expect({ program.add(child); }).to.throwException!AssertError;
+    expect({ program.add(new Command("child")); }).to.throwException!AssertError;
+    expect({ program.add(new Command("other")); }).to.not.throwException!AssertError;
 }
 
 unittest {
@@ -69,64 +70,64 @@ unittest {
     auto child = new Command("child");
     other.add(child);
     auto program = new Program("app");
-    assertThrown!AssertError(program.add(child));
+    expect({ program.add(child); }).to.throwException!AssertError;
 }
 
 unittest {
     auto command = new Command("c").argument("<a>", "d");
-    assertThrown!AssertError(command.add(new Command("sub")));
+    expect({ command.add(new Command("sub")); }).to.throwException!AssertError;
 
     auto holder = new Command("h");
     holder.add(new Command("sub"));
-    assertThrown!AssertError(holder.argument("<a>", "d"));
-    assertThrown!AssertError(holder.add(Argument.fromString("<a>", "d")));
+    expect({ holder.argument("<a>", "d"); }).to.throwException!AssertError;
+    expect({ holder.add(Argument.fromString("<a>", "d")); }).to.throwException!AssertError;
 }
 
 unittest {
     auto command = new Command("c").argument("<a>", "d");
-    assertThrown!AssertError(command.argument("<a>", "d"));
-    assertThrown!AssertError(command.argument("[a]", "d"));
-    assertNotThrown!AssertError(command.argument("<b>", "d"));
+    expect({ command.argument("<a>", "d"); }).to.throwException!AssertError;
+    expect({ command.argument("[a]", "d"); }).to.throwException!AssertError;
+    expect({ command.argument("<b>", "d"); }).to.not.throwException!AssertError;
 }
 
 unittest {
     auto command = new Command("c");
-    assertThrown!AssertError(command.argument("a", "d"));
-    assertThrown!AssertError(command.argument("<a", "d"));
-    assertThrown!AssertError(command.argument("<a>", "d", "x"));
+    expect({ command.argument("a", "d"); }).to.throwException!AssertError;
+    expect({ command.argument("<a", "d"); }).to.throwException!AssertError;
+    expect({ command.argument("<a>", "d", "x"); }).to.throwException!AssertError;
 }
 
 unittest {
     auto command = new Command("c").option("-t, --target <n>", "d");
-    assertThrown!AssertError(command.option("-t, --other <n>", "d"));
-    assertThrown!AssertError(command.option("-x, --target <n>", "d"));
-    assertThrown!AssertError(command.option("-t, --target <n>", "d"));
-    assertNotThrown!AssertError(command.option("-x, --other <n>", "d"));
+    expect({ command.option("-t, --other <n>", "d"); }).to.throwException!AssertError;
+    expect({ command.option("-x, --target <n>", "d"); }).to.throwException!AssertError;
+    expect({ command.option("-t, --target <n>", "d"); }).to.throwException!AssertError;
+    expect({ command.option("-x, --other <n>", "d"); }).to.not.throwException!AssertError;
 }
 
 unittest {
     auto command = new Command("c").option("--target <n>", "d");
-    assertThrown!AssertError(command.option("--target [n]", "d"));
-    assertNotThrown!AssertError(command.option("--other <n>", "d"));
-    assertNotThrown!AssertError(command.option("--another <n>", "d"));
+    expect({ command.option("--target [n]", "d"); }).to.throwException!AssertError;
+    expect({ command.option("--other <n>", "d"); }).to.not.throwException!AssertError;
+    expect({ command.option("--another <n>", "d"); }).to.not.throwException!AssertError;
 }
 
 unittest {
     auto command = new Command("c").option("-v, --verbose", "d");
-    assertThrown!AssertError(command.option("-v, --other", "d"));
-    assertThrown!AssertError(command.option("-x, --verbose", "d"));
-    assertThrown!AssertError(command.option("-v, --verbose", "d"));
-    assertNotThrown!AssertError(command.option("-x, --other", "d"));
+    expect({ command.option("-v, --other", "d"); }).to.throwException!AssertError;
+    expect({ command.option("-x, --verbose", "d"); }).to.throwException!AssertError;
+    expect({ command.option("-v, --verbose", "d"); }).to.throwException!AssertError;
+    expect({ command.option("-x, --other", "d"); }).to.not.throwException!AssertError;
 }
 
 unittest {
     auto command = new Command("c").option("--verbose", "d");
-    assertThrown!AssertError(command.option("--verbose", "d"));
+    expect({ command.option("--verbose", "d"); }).to.throwException!AssertError;
 }
 
 unittest {
     auto command = new Command("c");
-    assertThrown!AssertError(command.option("-t, --target <n>", "d", "x"));
+    expect({ command.option("-t, --target <n>", "d", "x"); }).to.throwException!AssertError;
 }
 
 unittest {
@@ -138,14 +139,14 @@ unittest {
     auto c = new Command("c");
     b.add(c);
 
-    assert(program.findCommand("a") is a);
-    assert(program.findCommand("b") is null);
-    assert(program.findCommand("c") is null);
-    assert(program.findCommand("app") is null);
-    assert(program.findCommand("missing") is null);
-    assert(a.findCommand("b") is b);
-    assert(a.findCommand("c") is null);
-    assert(c.findCommand("a") is null);
+    expect(program.findCommand("a") is a).to.equal(true);
+    expect(program.findCommand("b") is null).to.equal(true);
+    expect(program.findCommand("c") is null).to.equal(true);
+    expect(program.findCommand("app") is null).to.equal(true);
+    expect(program.findCommand("missing") is null).to.equal(true);
+    expect(a.findCommand("b") is b).to.equal(true);
+    expect(a.findCommand("c") is null).to.equal(true);
+    expect(c.findCommand("a") is null).to.equal(true);
 }
 
 unittest {
@@ -157,15 +158,15 @@ unittest {
     auto c = new Command("c");
     b.add(c);
 
-    assert(program.findCommand("app", program) is program);
-    assert(program.findCommand("a", program) is a);
-    assert(program.findCommand("b", program) is b);
-    assert(program.findCommand("c", program) is c);
-    assert(program.findCommand("missing", program) is null);
-    assert(a.findCommand("a", a) is a);
-    assert(a.findCommand("c", a) is c);
-    assert(a.findCommand("app", a) is null);
-    assert(a.findCommand("b", program) is b);
+    expect(program.findCommand("app", program) is program).to.equal(true);
+    expect(program.findCommand("a", program) is a).to.equal(true);
+    expect(program.findCommand("b", program) is b).to.equal(true);
+    expect(program.findCommand("c", program) is c).to.equal(true);
+    expect(program.findCommand("missing", program) is null).to.equal(true);
+    expect(a.findCommand("a", a) is a).to.equal(true);
+    expect(a.findCommand("c", a) is c).to.equal(true);
+    expect(a.findCommand("app", a) is null).to.equal(true);
+    expect(a.findCommand("b", program) is b).to.equal(true);
 }
 
 unittest {
@@ -174,35 +175,35 @@ unittest {
     auto second = new Command("second");
     program.add(first);
     program.add(second);
-    assert(program.findCommand("first") is first);
-    assert(program.findCommand("second") is second);
+    expect(program.findCommand("first") is first).to.equal(true);
+    expect(program.findCommand("second") is second).to.equal(true);
 }
 
 unittest {
     auto command = new Command("c");
-    assert(captureStderr({ command.error("something broke"); }) == "error: something broke\n");
+    expect(captureStderr({ command.error("something broke"); })).to.equal("error: something broke\n");
 }
 
 unittest {
     auto command = new Command("c");
-    assert(captureStderr({ command.error(""); }) == "error: \n");
-    assert(captureStderr({ command.error("a"); command.error("b"); }) == "error: a\nerror: b\n");
+    expect(captureStderr({ command.error(""); })).to.equal("error: \n");
+    expect(captureStderr({ command.error("a"); command.error("b"); })).to.equal("error: a\nerror: b\n");
 }
 
 unittest {
     auto orphan = new Command("orphan");
-    assertThrown!AssertError(orphan.usage());
-    assertThrown!AssertError(orphan.usage(true));
-    assertThrown!AssertError(orphan.printHelp());
+    expect({ orphan.usage(); }).to.throwException!AssertError;
+    expect({ orphan.usage(true); }).to.throwException!AssertError;
+    expect({ orphan.printHelp(); }).to.throwException!AssertError;
 }
 
 unittest {
     auto root = new Command("root");
     auto child = new Command("child");
     root.add(child);
-    assertThrown!AssertError(child.usage());
-    assertThrown!AssertError(root.usage());
-    assertThrown!AssertError(child.printHelp());
+    expect({ child.usage(); }).to.throwException!AssertError;
+    expect({ root.usage(); }).to.throwException!AssertError;
+    expect({ child.printHelp(); }).to.throwException!AssertError;
 }
 
 unittest {
@@ -213,8 +214,8 @@ unittest {
             seen = 5;
             return 11;
         });
-    assert(runArgs(program, "--number", "1") == 11);
-    assert(seen == 5);
+    expect(runArgs(program, "--number", "1")).to.equal(11);
+    expect(seen).to.equal(5);
 }
 
 unittest {
@@ -230,10 +231,10 @@ unittest {
     Program program = new TestProgram("app")
         .command(sub)
         .action((args) => 99);
-    assert(runArgs(program, "echo", "hi") == 3);
-    assert(received == "hi");
-    assert(commandName == "echo");
-    assert(runArgs(program) == 99);
+    expect(runArgs(program, "echo", "hi")).to.equal(3);
+    expect(received).to.equal("hi");
+    expect(commandName).to.equal("echo");
+    expect(runArgs(program)).to.equal(99);
 }
 
 unittest {
@@ -242,8 +243,8 @@ unittest {
     auto expected = helpOf(program);
     int status = -1;
     auto output = captureStdout({ status = runArgs(program); });
-    assert(status == 0);
-    assert(output == expected);
+    expect(status).to.equal(0);
+    expect(output).to.equal(expected);
 }
 
 unittest {
@@ -253,28 +254,28 @@ unittest {
     auto expected = helpOf(sub);
     int status = -1;
     auto output = captureStdout({ status = runArgs(program, "sub"); });
-    assert(status == 0);
-    assert(output == expected);
+    expect(status).to.equal(0);
+    expect(output).to.equal(expected);
 }
 
 unittest {
     Program program = new TestProgram("app").action((args) => 4);
-    assert(runArgs(program) == 4);
-    assert(runArgs(program) == 4);
+    expect(runArgs(program)).to.equal(4);
+    expect(runArgs(program)).to.equal(4);
 }
 
 unittest {
     Program program = new TestProgram("app")
         .argument("<value>", "Value")
         .action((args) => args.argument("value") == "ok" ? 0 : 1);
-    assert(runArgs(program, "ok") == 0);
-    assert(runArgs(program, "nope") == 1);
+    expect(runArgs(program, "ok")).to.equal(0);
+    expect(runArgs(program, "nope")).to.equal(1);
 }
 
 unittest {
     Program program = new TestProgram("app").argument("<value>", "Value");
     auto failure = collectCliExit({ runArgs(program); });
-    assert(failure !is null);
-    assert(failure.status == 2);
-    assert(failure.msg == "missing required argument 'value'");
+    expect(failure).to.not.beNull;
+    expect(failure.status).to.equal(2);
+    expect(failure.msg).to.equal("missing required argument 'value'");
 }

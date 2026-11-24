@@ -1,7 +1,8 @@
 module cmd.option_test;
 
 import core.exception : AssertError;
-import std.exception : assertNotThrown, assertThrown;
+
+import fluent.asserts;
 
 import cmd.ansi;
 import cmd.flag;
@@ -9,114 +10,114 @@ import cmd.option;
 import cmd.value_type;
 
 unittest {
-    assertThrown!AssertError(new Option("t", "target", "name", "d", true, "x"));
-    assertThrown!AssertError(new Option(null, null, "name", "d", false));
-    assertThrown!AssertError(new Option("ab", "target", "name", "d", false));
-    assertThrown!AssertError(new Option("t", "", "name", "d", false));
+    expect({ new Option("t", "target", "name", "d", true, "x"); }).to.throwException!AssertError;
+    expect({ new Option(null, null, "name", "d", false); }).to.throwException!AssertError;
+    expect({ new Option("ab", "target", "name", "d", false); }).to.throwException!AssertError;
+    expect({ new Option("t", "", "name", "d", false); }).to.throwException!AssertError;
 }
 
 unittest {
     auto option = Option.fromString("-o, --output <file>", "Output file");
-    assert(option.shortName == "o");
-    assert(option.longName == "output");
-    assert(option.paramName == "file");
-    assert(option.description == "Output file");
-    assert(option.required);
-    assert(option.defaultValue is null);
+    expect(option.shortName).to.equal("o");
+    expect(option.longName).to.equal("output");
+    expect(option.paramName).to.equal("file");
+    expect(option.description).to.equal("Output file");
+    expect(option.required).to.equal(true);
+    expect(option.defaultValue).to.beNull;
 }
 
 unittest {
     auto option = Option.fromString("-o, --output [file]", "Output file", "a.out");
-    assert(option.shortName == "o");
-    assert(option.longName == "output");
-    assert(option.paramName == "file");
-    assert(!option.required);
-    assert(option.defaultValue == "a.out");
+    expect(option.shortName).to.equal("o");
+    expect(option.longName).to.equal("output");
+    expect(option.paramName).to.equal("file");
+    expect(option.required).to.equal(false);
+    expect(option.defaultValue).to.equal("a.out");
 }
 
 unittest {
     auto onlyLong = Option.fromString("--output <file>", "d");
-    assert(onlyLong.shortName is null);
-    assert(onlyLong.longName == "output");
-    assert(onlyLong.paramName == "file");
-    assert(onlyLong.required);
+    expect(onlyLong.shortName).to.beNull;
+    expect(onlyLong.longName).to.equal("output");
+    expect(onlyLong.paramName).to.equal("file");
+    expect(onlyLong.required).to.equal(true);
 
     auto onlyShort = Option.fromString("-o [file]", "d");
-    assert(onlyShort.shortName == "o");
-    assert(onlyShort.longName is null);
-    assert(onlyShort.paramName == "file");
-    assert(!onlyShort.required);
+    expect(onlyShort.shortName).to.equal("o");
+    expect(onlyShort.longName).to.beNull;
+    expect(onlyShort.paramName).to.equal("file");
+    expect(onlyShort.required).to.equal(false);
 }
 
 unittest {
     auto option = Option.fromString("  --output <file>  ", "d");
-    assert(option.longName == "output");
-    assert(option.paramName == "file");
+    expect(option.longName).to.equal("output");
+    expect(option.paramName).to.equal("file");
 }
 
 unittest {
-    assertThrown!AssertError(Option.fromString("--output", "d"));
-    assertThrown!AssertError(Option.fromString("-o, --output <file> extra", "d"));
-    assertThrown!AssertError(Option.fromString("--output file", "d"));
-    assertThrown!AssertError(Option.fromString("--output <file", "d"));
-    assertThrown!AssertError(Option.fromString("--output file>", "d"));
-    assertThrown!AssertError(Option.fromString("--output <file]", "d"));
-    assertThrown!AssertError(Option.fromString("--output [file>", "d"));
-    assertThrown!AssertError(Option.fromString("--out <a b>", "d"));
-    assertThrown!AssertError(Option.fromString("--output <file>", "d", "x"));
+    expect({ Option.fromString("--output", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("-o, --output <file> extra", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--output file", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--output <file", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--output file>", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--output <file]", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--output [file>", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--out <a b>", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--output <file>", "d", "x"); }).to.throwException!AssertError;
 }
 
 unittest {
     auto required = new Option("o", "output", "file", "d", true);
-    assert(required.formattedName() == "-o, --output <file>");
-    assert(required.formattedName(false, false) == "-o, --output <file>");
-    assert(required.formattedName(false, true) == "-o, --output <file>");
+    expect(required.formattedName()).to.equal("-o, --output <file>");
+    expect(required.formattedName(false, false)).to.equal("-o, --output <file>");
+    expect(required.formattedName(false, true)).to.equal("-o, --output <file>");
 
     auto optional = new Option("o", "output", "file", "d", false);
-    assert(optional.formattedName() == "-o, --output [file]");
-    assert(optional.formattedName(false, false) == "-o, --output [file]");
+    expect(optional.formattedName()).to.equal("-o, --output [file]");
+    expect(optional.formattedName(false, false)).to.equal("-o, --output [file]");
 }
 
 unittest {
     auto required = new Option("o", "output", "file", "d", true);
     auto colored = required.formattedName(true, false);
-    assert(colored.stripAnsi() == "-o, --output <file>");
+    expect(colored.stripAnsi()).to.equal("-o, --output <file>");
 
     auto optional = new Option("o", "output", "file", "d", false);
     auto optionalColored = optional.formattedName(true, false);
-    assert(optionalColored.stripAnsi() == "-o, --output [file]");
+    expect(optionalColored.stripAnsi()).to.equal("-o, --output [file]");
 }
 
 unittest {
     auto onlyLong = new Option(null, "output", "file", "d", true);
-    assert(onlyLong.formattedName() == "--output <file>");
-    assert(onlyLong.formattedName(false, false) == "--output <file>");
-    assert(onlyLong.formattedName(false, true) == "    --output <file>");
-    assert(onlyLong.formattedName(true, true).stripAnsi() == "    --output <file>");
-    assert(onlyLong.formattedName(true, false).stripAnsi() == "--output <file>");
+    expect(onlyLong.formattedName()).to.equal("--output <file>");
+    expect(onlyLong.formattedName(false, false)).to.equal("--output <file>");
+    expect(onlyLong.formattedName(false, true)).to.equal("    --output <file>");
+    expect(onlyLong.formattedName(true, true).stripAnsi()).to.equal("    --output <file>");
+    expect(onlyLong.formattedName(true, false).stripAnsi()).to.equal("--output <file>");
 
     auto onlyShort = new Option("o", null, "file", "d", true);
-    assert(onlyShort.formattedName() == "-o <file>");
-    assert(onlyShort.formattedName(false, true) == "-o <file>");
+    expect(onlyShort.formattedName()).to.equal("-o <file>");
+    expect(onlyShort.formattedName(false, true)).to.equal("-o <file>");
 }
 
 unittest {
     Flag flag = new Option("o", "output", "file", "d", true);
-    assert(flag.formattedName() == "-o, --output <file>");
-    assert(flag.formattedName(false) == "-o, --output <file>");
+    expect(flag.formattedName()).to.equal("-o, --output <file>");
+    expect(flag.formattedName(false)).to.equal("-o, --output <file>");
 
     Flag longOnly = new Option(null, "output", "file", "d", false);
-    assert(longOnly.formattedName(true) == "    --output [file]");
+    expect(longOnly.formattedName(true)).to.equal("    --output [file]");
 }
 
 unittest {
     auto option = new Option("o", "output", "file", "d", true);
-    assert(option.matches("--output"));
-    assert(option.matches("-o"));
-    assert(option.matches("output"));
-    assert(option.matches("o"));
-    assert(!option.matches("--file"));
-    assert(!option.matches("-x"));
+    expect(option.matches("--output")).to.equal(true);
+    expect(option.matches("-o")).to.equal(true);
+    expect(option.matches("output")).to.equal(true);
+    expect(option.matches("o")).to.equal(true);
+    expect(option.matches("--file")).to.equal(false);
+    expect(option.matches("-x")).to.equal(false);
 }
 
 unittest {
@@ -126,14 +127,14 @@ unittest {
     auto d = new Option("o", "output", "path", "one", true);
     auto e = new Option(null, "output", "file", "one", true);
 
-    assert(a == a);
-    assert(a == b);
-    assert(a.toHash() == b.toHash());
-    assert(a != c);
-    assert(a != d);
-    assert(a != e);
-    assert(!a.opEquals(new Object()));
-    assert(!a.opEquals(new Flag("o", "output", "one")));
+    expect(a).to.equal(a);
+    expect(a).to.equal(b);
+    expect(a.toHash()).to.equal(b.toHash());
+    expect(a).to.not.equal(c);
+    expect(a).to.not.equal(d);
+    expect(a).to.not.equal(e);
+    expect(a.opEquals(new Object())).to.equal(false);
+    expect(a.opEquals(new Flag("o", "output", "one"))).to.equal(false);
 }
 
 unittest {
@@ -144,70 +145,72 @@ unittest {
 
     string[][Option] values;
     values[c] = ["x"];
-    assert(b in values);
-    assert(a !in values);
-    assert(d !in values);
+    expect(b in values).to.not.beNull;
+    expect(a in values).to.beNull;
+    expect(d in values).to.beNull;
     values[b] = ["y"];
-    assert(values.length == 1);
-    assert(values[c] == ["y"]);
+    expect(values.length).to.equal(1);
+    expect(values[c]).to.equal(["y"]);
 }
 
 unittest {
     auto integer = ValueType.fromString("int");
     auto choice = ValueType.fromString("json|yaml");
-    assertThrown!AssertError(new Option("p", "port", "n", "d", false, "abc", integer));
-    assertThrown!AssertError(new Option("p", "port", "n", "d", false, "01", integer));
-    assertThrown!AssertError(new Option("f", "format", "f", "d", false, "xml", choice));
-    assertNotThrown!AssertError(new Option("p", "port", "n", "d", false, "80", integer));
-    assertNotThrown!AssertError(new Option("f", "format", "f", "d", false, "json", choice));
-    assertNotThrown!AssertError(new Option("c", "config", "p", "d", false, "any value", ValueType.fromString("file")));
+    expect({ new Option("p", "port", "n", "d", false, "abc", integer); }).to.throwException!AssertError;
+    expect({ new Option("p", "port", "n", "d", false, "01", integer); }).to.throwException!AssertError;
+    expect({ new Option("f", "format", "f", "d", false, "xml", choice); }).to.throwException!AssertError;
+    expect({ new Option("p", "port", "n", "d", false, "80", integer); }).to.not.throwException!AssertError;
+    expect({ new Option("f", "format", "f", "d", false, "json", choice); }).to.not.throwException!AssertError;
+    expect({ new Option("c", "config", "p", "d", false, "any value", ValueType.fromString("file")); })
+        .to.not.throwException!AssertError;
 }
 
 unittest {
-    assert(Option.fromString("--name <name>", "d").valueType.kind == ValueType.Kind.text);
-    assert(Option.fromString("--name <name:string>", "d").valueType.kind == ValueType.Kind.text);
-    assert(Option.fromString("--config [path:file]", "d").valueType.kind == ValueType.Kind.file);
-    assert(Option.fromString("--root <path:dir>", "d").valueType.kind == ValueType.Kind.dir);
+    expect(Option.fromString("--name <name>", "d").valueType.kind).to.equal(ValueType.Kind.text);
+    expect(Option.fromString("--name <name:string>", "d").valueType.kind).to.equal(ValueType.Kind.text);
+    expect(Option.fromString("--config [path:file]", "d").valueType.kind).to.equal(ValueType.Kind.file);
+    expect(Option.fromString("--root <path:dir>", "d").valueType.kind).to.equal(ValueType.Kind.dir);
 }
 
 unittest {
     auto option = Option.fromString("-p, --port <number:int>", "Port");
-    assert(option.shortName == "p");
-    assert(option.longName == "port");
-    assert(option.paramName == "number");
-    assert(option.valueType.kind == ValueType.Kind.integer);
-    assert(option.required);
+    expect(option.shortName).to.equal("p");
+    expect(option.longName).to.equal("port");
+    expect(option.paramName).to.equal("number");
+    expect(option.valueType.kind).to.equal(ValueType.Kind.integer);
+    expect(option.required).to.equal(true);
 }
 
 unittest {
     auto option = Option.fromString("--format [format:json|yaml|toml]", "Format", "json");
-    assert(option.paramName == "format");
-    assert(option.valueType.kind == ValueType.Kind.choice);
-    assert(option.valueType.choices == ["json", "yaml", "toml"]);
-    assert(!option.required);
-    assert(option.defaultValue == "json");
+    expect(option.paramName).to.equal("format");
+    expect(option.valueType.kind).to.equal(ValueType.Kind.choice);
+    expect(option.valueType.choices).to.equal(["json", "yaml", "toml"]);
+    expect(option.required).to.equal(false);
+    expect(option.defaultValue).to.equal("json");
 }
 
 unittest {
-    assertThrown!AssertError(Option.fromString("--port <n:float>", "d"));
-    assertThrown!AssertError(Option.fromString("--port <n:json>", "d"));
-    assertThrown!AssertError(Option.fromString("--port <:int>", "d"));
-    assertThrown!AssertError(Option.fromString("--port [n:int]", "d", "x"));
-    assertThrown!AssertError(Option.fromString("--format [f:json|yaml]", "d", "xml"));
-    assertNotThrown!AssertError(Option.fromString("--port [n:int]", "d", "80"));
+    expect({ Option.fromString("--port <n:float>", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--port <n:json>", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--port <:int>", "d"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--port [n:int]", "d", "x"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--format [f:json|yaml]", "d", "xml"); }).to.throwException!AssertError;
+    expect({ Option.fromString("--port [n:int]", "d", "80"); }).to.not.throwException!AssertError;
 }
 
 unittest {
-    assert(Option.fromString("-p, --port <number:int>", "d").formattedName() == "-p, --port <number>");
-    assert(Option.fromString("--config [path:file]", "d").formattedName() == "--config [path]");
-    assert(Option.fromString("-f, --format [format:json|yaml]", "d").formattedName() == "-f, --format [json|yaml]");
-    assert(Option.fromString("--format <format:json|yaml>", "d").formattedName(false, true)
-        == "    --format <json|yaml>");
+    expect(Option.fromString("-p, --port <number:int>", "d").formattedName()).to.equal("-p, --port <number>");
+    expect(Option.fromString("--config [path:file]", "d").formattedName()).to.equal("--config [path]");
+    expect(Option.fromString("-f, --format [format:json|yaml]", "d").formattedName())
+        .to.equal("-f, --format [json|yaml]");
+    expect(Option.fromString("--format <format:json|yaml>", "d").formattedName(false, true))
+        .to.equal("    --format <json|yaml>");
 }
 
 unittest {
-    assert(Option.fromString("-p, --port <number:int>", "d").formattedName(true, false).stripAnsi()
-        == "-p, --port <number>");
-    assert(Option.fromString("-f, --format [format:json|yaml]", "d").formattedName(true, false).stripAnsi()
-        == "-f, --format [json|yaml]");
+    expect(Option.fromString("-p, --port <number:int>", "d").formattedName(true, false).stripAnsi())
+        .to.equal("-p, --port <number>");
+    expect(Option.fromString("-f, --format [format:json|yaml]", "d").formattedName(true, false).stripAnsi())
+        .to.equal("-f, --format [json|yaml]");
 }

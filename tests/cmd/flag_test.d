@@ -1,107 +1,108 @@
 module cmd.flag_test;
 
 import core.exception : AssertError;
-import std.exception : assertThrown;
+
+import fluent.asserts;
 
 import cmd.flag;
 
 unittest {
-    assertThrown!AssertError(new Flag(null, null, "d"));
-    assertThrown!AssertError(new Flag("ab", "verbose", "d"));
-    assertThrown!AssertError(new Flag("", "verbose", "d"));
-    assertThrown!AssertError(new Flag("v", "", "d"));
-    assertThrown!AssertError(new Flag(null, "", "d"));
+    expect({ new Flag(null, null, "d"); }).to.throwException!AssertError;
+    expect({ new Flag("ab", "verbose", "d"); }).to.throwException!AssertError;
+    expect({ new Flag("", "verbose", "d"); }).to.throwException!AssertError;
+    expect({ new Flag("v", "", "d"); }).to.throwException!AssertError;
+    expect({ new Flag(null, "", "d"); }).to.throwException!AssertError;
 }
 
 unittest {
     auto flag = Flag.fromString("-v, --verbose", "Verbose output");
-    assert(flag.shortName == "v");
-    assert(flag.longName == "verbose");
-    assert(flag.description == "Verbose output");
+    expect(flag.shortName).to.equal("v");
+    expect(flag.longName).to.equal("verbose");
+    expect(flag.description).to.equal("Verbose output");
 }
 
 unittest {
     auto onlyLong = Flag.fromString("--verbose", "d");
-    assert(onlyLong.shortName is null);
-    assert(onlyLong.longName == "verbose");
+    expect(onlyLong.shortName).to.beNull;
+    expect(onlyLong.longName).to.equal("verbose");
 
     auto onlyShort = Flag.fromString("-v", "d");
-    assert(onlyShort.shortName == "v");
-    assert(onlyShort.longName is null);
+    expect(onlyShort.shortName).to.equal("v");
+    expect(onlyShort.longName).to.beNull;
 }
 
 unittest {
     foreach (format; ["--verbose, -v", "-v,--verbose", "  -v ,  --verbose  ", "  --verbose,-v  "]) {
         auto flag = Flag.fromString(format, "d");
-        assert(flag.shortName == "v");
-        assert(flag.longName == "verbose");
+        expect(flag.shortName).to.equal("v");
+        expect(flag.longName).to.equal("verbose");
     }
 }
 
 unittest {
-    assertThrown!AssertError(Flag.fromString("-a, -b, --c", "d"));
-    assertThrown!AssertError(Flag.fromString("-a,-b,-c,-d", "d"));
+    expect({ Flag.fromString("-a, -b, --c", "d"); }).to.throwException!AssertError;
+    expect({ Flag.fromString("-a,-b,-c,-d", "d"); }).to.throwException!AssertError;
 }
 
 unittest {
     auto both = new Flag("v", "verbose", "d");
-    assert(both.formattedName() == "-v, --verbose");
-    assert(both.formattedName(true) == "-v, --verbose");
-    assert(both.formattedName(false) == "-v, --verbose");
+    expect(both.formattedName()).to.equal("-v, --verbose");
+    expect(both.formattedName(true)).to.equal("-v, --verbose");
+    expect(both.formattedName(false)).to.equal("-v, --verbose");
 }
 
 unittest {
     auto onlyShort = new Flag("v", null, "d");
-    assert(onlyShort.formattedName() == "-v");
-    assert(onlyShort.formattedName(true) == "-v");
+    expect(onlyShort.formattedName()).to.equal("-v");
+    expect(onlyShort.formattedName(true)).to.equal("-v");
 }
 
 unittest {
     auto onlyLong = new Flag(null, "verbose", "d");
-    assert(onlyLong.formattedName() == "--verbose");
-    assert(onlyLong.formattedName(false) == "--verbose");
-    assert(onlyLong.formattedName(true) == "    --verbose");
+    expect(onlyLong.formattedName()).to.equal("--verbose");
+    expect(onlyLong.formattedName(false)).to.equal("--verbose");
+    expect(onlyLong.formattedName(true)).to.equal("    --verbose");
 }
 
 unittest {
     auto flag = new Flag("v", "verbose", "d");
-    assert(flag.matches("--verbose"));
-    assert(flag.matches("-v"));
-    assert(flag.matches("verbose"));
-    assert(flag.matches("v"));
+    expect(flag.matches("--verbose")).to.equal(true);
+    expect(flag.matches("-v")).to.equal(true);
+    expect(flag.matches("verbose")).to.equal(true);
+    expect(flag.matches("v")).to.equal(true);
 }
 
 unittest {
     auto flag = new Flag("v", "verbose", "d");
-    assert(!flag.matches("--v"));
-    assert(!flag.matches("-verbose"));
-    assert(!flag.matches("--x"));
-    assert(!flag.matches("-x"));
-    assert(!flag.matches("x"));
-    assert(!flag.matches("--"));
-    assert(!flag.matches("-"));
-    assert(!flag.matches(""));
-    assert(!flag.matches(null));
+    expect(flag.matches("--v")).to.equal(false);
+    expect(flag.matches("-verbose")).to.equal(false);
+    expect(flag.matches("--x")).to.equal(false);
+    expect(flag.matches("-x")).to.equal(false);
+    expect(flag.matches("x")).to.equal(false);
+    expect(flag.matches("--")).to.equal(false);
+    expect(flag.matches("-")).to.equal(false);
+    expect(flag.matches("")).to.equal(false);
+    expect(flag.matches(null)).to.equal(false);
 }
 
 unittest {
     auto onlyLong = new Flag(null, "verbose", "d");
-    assert(onlyLong.matches("--verbose"));
-    assert(onlyLong.matches("verbose"));
-    assert(!onlyLong.matches("-v"));
-    assert(!onlyLong.matches("v"));
-    assert(!onlyLong.matches("-"));
-    assert(!onlyLong.matches(null));
+    expect(onlyLong.matches("--verbose")).to.equal(true);
+    expect(onlyLong.matches("verbose")).to.equal(true);
+    expect(onlyLong.matches("-v")).to.equal(false);
+    expect(onlyLong.matches("v")).to.equal(false);
+    expect(onlyLong.matches("-")).to.equal(false);
+    expect(onlyLong.matches(null)).to.equal(false);
 }
 
 unittest {
     auto onlyShort = new Flag("v", null, "d");
-    assert(onlyShort.matches("-v"));
-    assert(onlyShort.matches("v"));
-    assert(!onlyShort.matches("--v"));
-    assert(!onlyShort.matches("-x"));
-    assert(!onlyShort.matches("verbose"));
-    assert(!onlyShort.matches(null));
+    expect(onlyShort.matches("-v")).to.equal(true);
+    expect(onlyShort.matches("v")).to.equal(true);
+    expect(onlyShort.matches("--v")).to.equal(false);
+    expect(onlyShort.matches("-x")).to.equal(false);
+    expect(onlyShort.matches("verbose")).to.equal(false);
+    expect(onlyShort.matches(null)).to.equal(false);
 }
 
 unittest {
@@ -110,13 +111,13 @@ unittest {
     auto c = new Flag("v", null, "one");
     auto d = new Flag(null, "verbose", "one");
 
-    assert(a == a);
-    assert(a == b);
-    assert(a.toHash() == b.toHash());
-    assert(a != c);
-    assert(a != d);
-    assert(c != d);
-    assert(!a.opEquals(new Object()));
+    expect(a).to.equal(a);
+    expect(a).to.equal(b);
+    expect(a.toHash()).to.equal(b.toHash());
+    expect(a).to.not.equal(c);
+    expect(a).to.not.equal(d);
+    expect(c).to.not.equal(d);
+    expect(a.opEquals(new Object())).to.equal(false);
 }
 
 unittest {
@@ -126,9 +127,9 @@ unittest {
 
     uint[Flag] counts;
     counts[a] = 2;
-    assert(counts[b] == 2);
-    assert(c !in counts);
+    expect(counts[b]).to.equal(2);
+    expect(c in counts).to.beNull;
     counts[b] = 5;
-    assert(counts.length == 1);
-    assert(counts[a] == 5);
+    expect(counts.length).to.equal(1);
+    expect(counts[a]).to.equal(5);
 }

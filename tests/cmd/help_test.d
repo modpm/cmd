@@ -1,8 +1,9 @@
 module cmd.help_test;
 
-import std.algorithm : canFind, startsWith;
 import std.array : join;
 import std.exception : collectException;
+
+import fluent.asserts;
 
 import cmd.ansi;
 import cmd.command;
@@ -12,8 +13,8 @@ import cmd.test_support;
 
 unittest {
     Program program = new TestProgram("app");
-    assert(program.usage() == "app");
-    assert(program.usage(true) == "app");
+    expect(program.usage()).to.equal("app");
+    expect(program.usage(true)).to.equal("app");
 }
 
 unittest {
@@ -21,55 +22,55 @@ unittest {
         .argument("<input>", "d")
         .argument("[output]", "d")
         .argument("[files...]", "d");
-    assert(program.usage() == "app <input> [output] [files...]");
-    assert(program.usage(true).stripAnsi() == "app <input> [output] [files...]");
+    expect(program.usage()).to.equal("app <input> [output] [files...]");
+    expect(program.usage(true).stripAnsi()).to.equal("app <input> [output] [files...]");
 }
 
 unittest {
     Program required = new TestProgram("app").option("-t, --target <n>", "d");
-    assert(required.usage() == "app <options>");
+    expect(required.usage()).to.equal("app <options>");
 
     Program optional = new TestProgram("app").option("-p, --port [n]", "d");
-    assert(optional.usage() == "app [options]");
+    expect(optional.usage()).to.equal("app [options]");
 
     Program flags = new TestProgram("app").option("-v, --verbose", "d");
-    assert(flags.usage() == "app [options]");
+    expect(flags.usage()).to.equal("app [options]");
 
     Program mixed = new TestProgram("app").option("-v, --verbose", "d").option("-t, --target <n>", "d");
-    assert(mixed.usage() == "app <options>");
+    expect(mixed.usage()).to.equal("app <options>");
 }
 
 unittest {
     Program program = new TestProgram("app").option("-t, --target <n>", "d").argument("<input>", "d");
-    assert(program.usage() == "app <options> <input>");
+    expect(program.usage()).to.equal("app <options> <input>");
 }
 
 unittest {
     Program program = new TestProgram("app").helpOption("-h, --help", "d");
-    assert(program.usage().startsWith("app [options]"));
+    expect(program.usage()).to.startWith("app [options]");
 
     Program versioned = new TestProgram("app").versionString("1").versionOption("--version", "d");
-    assert(versioned.usage().startsWith("app [options]"));
+    expect(versioned.usage()).to.startWith("app [options]");
 }
 
 unittest {
     Program program = new TestProgram("app");
     auto sub = new TestCommand("sub");
     program.add(sub);
-    assert(sub.usage() == "app sub");
-    assert(sub.usage(true) == "app sub");
+    expect(sub.usage()).to.equal("app sub");
+    expect(sub.usage(true)).to.equal("app sub");
 }
 
 unittest {
     Program program = new TestProgram("app").helpOption("-h, --help", "d");
     auto sub = new TestCommand("sub");
     program.add(sub);
-    assert(sub.usage() == "app [global options] sub");
+    expect(sub.usage()).to.equal("app [global options] sub");
 
     Program versioned = new TestProgram("app").versionString("1").versionOption("--version", "d");
     auto other = new TestCommand("other");
     versioned.add(other);
-    assert(other.usage() == "app [global options] other");
+    expect(other.usage()).to.equal("app [global options] other");
 }
 
 unittest {
@@ -78,7 +79,7 @@ unittest {
     program.add(sub);
     sub.option("-v, --verbose", "d");
     sub.argument("<name>", "d");
-    assert(sub.usage() == "app sub [options] <name>");
+    expect(sub.usage()).to.equal("app sub [options] <name>");
 }
 
 unittest {
@@ -86,7 +87,7 @@ unittest {
     auto sub = new TestCommand("sub");
     program.add(sub);
     sub.option("-t, --target <n>", "d");
-    assert(sub.usage() == "app sub <options>");
+    expect(sub.usage()).to.equal("app sub <options>");
 }
 
 unittest {
@@ -96,8 +97,8 @@ unittest {
     auto add = new TestCommand("add");
     remote.add(add);
     add.argument("<url>", "d");
-    assert(remote.usage() == "app [global options] remote <command> ...");
-    assert(add.usage() == "app [global options] remote add <url>");
+    expect(remote.usage()).to.equal("app [global options] remote <command> ...");
+    expect(add.usage()).to.equal("app [global options] remote add <url>");
 }
 
 unittest {
@@ -108,33 +109,33 @@ unittest {
     remote.add(add);
     auto deep = new TestCommand("deep");
     add.add(deep);
-    assert(deep.usage() == "app remote add deep");
-    assert(deep.chain.length == 4);
+    expect(deep.usage()).to.equal("app remote add deep");
+    expect(deep.chain.length).to.equal(4);
 }
 
 unittest {
     Program program = new TestProgram("app");
     int status = -1;
     auto output = captureStdout({ status = program.printHelp(); });
-    assert(status == 0);
-    assert(output.stripAnsi() == "Usage:\n  app\n");
+    expect(status).to.equal(0);
+    expect(output.stripAnsi()).to.equal("Usage:\n  app\n");
 }
 
 unittest {
     auto output = helpOf(new TestProgram("app"));
-    assert(output == bold("Usage:") ~ "\n  app\n");
+    expect(output).to.equal(bold("Usage:") ~ "\n  app\n");
 }
 
 unittest {
     Program program = new TestProgram("app").description("Does things");
-    assert(helpOf(program).stripAnsi() == "Usage:\n  app\n\nDescription:\n  Does things\n");
+    expect(helpOf(program).stripAnsi()).to.equal("Usage:\n  app\n\nDescription:\n  Does things\n");
 }
 
 unittest {
     Program program = new TestProgram("app").description("Does things");
     auto output = helpOf(program);
-    assert(output.canFind(bold("Usage:")));
-    assert(output.canFind(bold("Description:")));
+    expect(output).to.contain(bold("Usage:"));
+    expect(output).to.contain(bold("Description:"));
 }
 
 unittest {
@@ -149,7 +150,7 @@ unittest {
         "  input  Input file",
         "  files  More files",
     ].join("\n") ~ "\n";
-    assert(helpOf(program).stripAnsi() == expected);
+    expect(helpOf(program).stripAnsi()).to.equal(expected);
 }
 
 unittest {
@@ -164,7 +165,7 @@ unittest {
         "  -o, --output [file]" ~ sp(2) ~ "Output file",
         "  -q, --quiet" ~ sp(10) ~ "Quiet",
     ].join("\n") ~ "\n";
-    assert(helpOf(program).stripAnsi() == expected);
+    expect(helpOf(program).stripAnsi()).to.equal(expected);
 }
 
 unittest {
@@ -176,7 +177,7 @@ unittest {
         .option("--excited", "Add excitement")
         .option("-t, --times <n>", "Repeat count");
 
-    assert(greet.usage() == "app greet <options> <name>");
+    expect(greet.usage()).to.equal("app greet <options> <name>");
 
     auto expected = [
         "Usage:",
@@ -193,10 +194,10 @@ unittest {
         "  -t, --times <n>" ~ sp(2) ~ "Repeat count",
     ].join("\n") ~ "\n";
     auto output = helpOf(greet);
-    assert(output.stripAnsi() == expected);
-    assert(output.startsWith(bold("Usage:") ~ "\n"));
-    assert(output.canFind(bold("Arguments:")));
-    assert(output.canFind(bold("Options:")));
+    expect(output.stripAnsi()).to.equal(expected);
+    expect(output).to.startWith(bold("Usage:") ~ "\n");
+    expect(output).to.contain(bold("Arguments:"));
+    expect(output).to.contain(bold("Options:"));
 }
 
 unittest {
@@ -225,7 +226,7 @@ unittest {
         "  -h, --help" ~ sp(5) ~ "Show help",
         "  " ~ sp(4) ~ "--version" ~ sp(2) ~ "Show version",
     ].join("\n") ~ "\n";
-    assert(helpOf(program).stripAnsi() == expected);
+    expect(helpOf(program).stripAnsi()).to.equal(expected);
 }
 
 unittest {
@@ -238,27 +239,27 @@ unittest {
         "Commands:",
         "  help  Show help for command",
     ].join("\n") ~ "\n";
-    assert(helpOf(program).stripAnsi() == expected);
+    expect(helpOf(program).stripAnsi()).to.equal(expected);
 }
 
 unittest {
     Program program = new TestProgram("app");
     program.command(new TestHelpCommand("Display help"));
-    assert(helpOf(program).stripAnsi().canFind("  help  Display help\n"));
+    expect(helpOf(program).stripAnsi()).to.contain("  help  Display help\n");
 }
 
 unittest {
     auto help = new HelpCommand();
-    assert(help.name() == "help");
-    assert(help.description() == "Show help for command");
-    assert(new HelpCommand("Custom").description() == "Custom");
+    expect(help.name()).to.equal("help");
+    expect(help.description()).to.equal("Show help for command");
+    expect(new HelpCommand("Custom").description()).to.equal("Custom");
 }
 
 unittest {
     Program program = new TestProgram("app");
     auto help = new TestHelpCommand();
     program.command(help);
-    assert(help.usage() == "app help [command...]");
+    expect(help.usage()).to.equal("app help [command...]");
 }
 
 unittest {
@@ -269,8 +270,8 @@ unittest {
 
     int status = -1;
     auto output = captureStdout({ status = runArgs(program, "help"); });
-    assert(status == 0);
-    assert(output == expected);
+    expect(status).to.equal(0);
+    expect(output).to.equal(expected);
 }
 
 unittest {
@@ -283,9 +284,9 @@ unittest {
 
     int status = -1;
     auto output = captureStdout({ status = runArgs(program, "help", "build"); });
-    assert(status == 0);
-    assert(output == expected);
-    assert(output != helpOf(program));
+    expect(status).to.equal(0);
+    expect(output).to.equal(expected);
+    expect(output).to.not.equal(helpOf(program));
 }
 
 unittest {
@@ -298,17 +299,17 @@ unittest {
 
     int status = -1;
     auto output = captureStdout({ status = runArgs(program, "help", "remote", "add"); });
-    assert(status == 0);
-    assert(output == expected);
+    expect(status).to.equal(0);
+    expect(output).to.equal(expected);
 }
 
 unittest {
     Program program = new TestProgram("app");
     program.command(new TestHelpCommand());
     auto failure = collectCliExit({ runArgs(program, "help", "nope"); });
-    assert(failure !is null);
-    assert(failure.status == 2);
-    assert(failure.msg == "unknown command: nope");
+    expect(failure).to.not.beNull;
+    expect(failure.status).to.equal(2);
+    expect(failure.msg).to.equal("unknown command: nope");
 }
 
 unittest {
@@ -316,17 +317,17 @@ unittest {
     auto build = new TestCommand("build");
     program.command(build).command(new TestHelpCommand());
     auto failure = collectCliExit({ runArgs(program, "help", "build", "nope"); });
-    assert(failure !is null);
-    assert(failure.status == 2);
-    assert(failure.msg == "unknown command: nope");
+    expect(failure).to.not.beNull;
+    expect(failure.status).to.equal(2);
+    expect(failure.msg).to.equal("unknown command: nope");
 }
 
 unittest {
     Program program = new TestProgram("app");
     program.command(new TestCommand("build"));
     auto failure = collectCliExit({ runArgs(program, "help", "nope"); });
-    assert(failure !is null);
-    assert(failure.msg == "unknown command 'help'");
+    expect(failure).to.not.beNull;
+    expect(failure.msg).to.equal("unknown command 'help'");
 }
 
 unittest {
@@ -343,10 +344,10 @@ unittest {
         "Options:",
         "  -f, --format [json|yaml]" ~ sp(2) ~ "Output format",
     ].join("\n") ~ "\n";
-    assert(helpOf(program).stripAnsi() == expected);
+    expect(helpOf(program).stripAnsi()).to.equal(expected);
 }
 
 unittest {
     Program program = new TestProgram("app").argument("<format:json|yaml>", "d");
-    assert(program.usage() == "app <json|yaml>");
+    expect(program.usage()).to.equal("app <json|yaml>");
 }

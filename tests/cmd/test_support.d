@@ -9,6 +9,8 @@ import std.stdio : File, stderr, stdout;
 
 import core.sys.posix.unistd : close, dup, dup2;
 
+import fluent.asserts;
+
 import cmd.command;
 import cmd.help_command;
 import cmd.parsed_args;
@@ -70,9 +72,9 @@ ParsedArgs parseOk(const Program program, string[] args...) {
 
 void assertFails(const Program program, string message, string[] args...) {
     auto failure = parseFails(program, args);
-    assert(failure !is null, "expected failure: " ~ message);
-    assert(failure.status == 2);
-    assert(failure.msg == message);
+    expect(failure).to.not.beNull.because("expected failure: " ~ message);
+    expect(failure.status).to.equal(2);
+    expect(failure.msg).to.equal(message);
 }
 
 CliExit collectCliExit(scope void delegate() action) {

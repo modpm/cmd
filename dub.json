@@ -7,6 +7,9 @@
 			"name": "library"
 		},
 		{
+			"dependencies": {
+				"fluent-asserts": "~>2.1"
+			},
 			"name": "unittest",
 			"sourcePaths": ["tests"]
 		}

@@ -1,7 +1,8 @@
 module cmd.document_test;
 
 import core.exception : AssertError;
-import std.exception : assertNotThrown, assertThrown;
+
+import fluent.asserts;
 
 import cmd.ansi;
 import cmd.document;
@@ -18,71 +19,72 @@ class ProbeSection : Section {
 }
 
 unittest {
-    assertThrown!AssertError(new Section(null));
-    assertNotThrown!AssertError(new Section(""));
+    expect({ new Section(null); }).to.throwException!AssertError;
+    expect({ new Section(""); }).to.not.throwException!AssertError;
 }
 
 unittest {
     auto section = new Section("Title");
-    assert(section.add(Term("a", "first")) is section);
-    assert(section.add("b", "second") is section);
-    assert(section.terms().length == 2);
-    assert(section.terms()[0][0] == "a");
-    assert(section.terms()[1][0] == "b");
-    assert(section.terms()[1][1] == "second");
+    expect(section.add(Term("a", "first")) is section).to.equal(true);
+    expect(section.add("b", "second") is section).to.equal(true);
+    expect(section.terms().length).to.equal(2);
+    expect(section.terms()[0][0]).to.equal("a");
+    expect(section.terms()[1][0]).to.equal("b");
+    expect(section.terms()[1][1]).to.equal("second");
 }
 
 unittest {
-    assert(new ProbeSection("T").longestTerm() == 0);
-    assert(new ProbeSection("T", null, [Term("ab", "x"), Term("abcd", "y"), Term("abc", "z")]).longestTerm() == 4);
-    assert(new ProbeSection("T", null, [Term(bold("abc"), "x")]).longestTerm() == 3);
+    expect(new ProbeSection("T").longestTerm()).to.equal(0);
+    expect(new ProbeSection("T", null, [Term("ab", "x"), Term("abcd", "y"), Term("abc", "z")]).longestTerm())
+        .to.equal(4);
+    expect(new ProbeSection("T", null, [Term(bold("abc"), "x")]).longestTerm()).to.equal(3);
 }
 
 unittest {
     auto section = new ProbeSection("T");
     section.add("ab", "x");
-    assert(section.longestTerm() == 2);
+    expect(section.longestTerm()).to.equal(2);
     section.add("abcdef", "y");
-    assert(section.longestTerm() == 6);
+    expect(section.longestTerm()).to.equal(6);
     section.add("a", "z");
-    assert(section.longestTerm() == 6);
+    expect(section.longestTerm()).to.equal(6);
     section.add(Term(bold("abcdefgh"), "w"));
-    assert(section.longestTerm() == 8);
+    expect(section.longestTerm()).to.equal(8);
     section.add(Term(bold("abcdefghij"), "v"));
-    assert(section.longestTerm() == 10);
+    expect(section.longestTerm()).to.equal(10);
     section.add(Term(link("abcdefghijkl", "u"), "t"));
-    assert(section.longestTerm() == 12);
+    expect(section.longestTerm()).to.equal(12);
 }
 
 unittest {
     auto doc = new Document();
     auto first = new Section("A");
     auto second = new Section("B");
-    assert(doc.add(first) is doc);
-    assert(doc.add(second) is doc);
-    assert(doc.sections().length == 2);
-    assert(doc.sections()[0] is first);
-    assert(doc.sections()[1] is second);
+    expect(doc.add(first) is doc).to.equal(true);
+    expect(doc.add(second) is doc).to.equal(true);
+    expect(doc.sections().length).to.equal(2);
+    expect(doc.sections()[0] is first).to.equal(true);
+    expect(doc.sections()[1] is second).to.equal(true);
 }
 
 unittest {
     auto doc = new Document();
-    assert(doc.add("A") is doc);
-    assert(doc.add("B", "body") is doc);
-    assert(doc.add("C", "body", [Term("k", "v")]) is doc);
-    assert(doc.sections().length == 3);
-    assert(doc.sections()[0].title == "A");
-    assert(doc.sections()[0].body is null);
-    assert(doc.sections()[1].title == "B");
-    assert(doc.sections()[1].body == "body");
-    assert(doc.sections()[2].title == "C");
-    assert(doc.sections()[2].terms().length == 1);
-    assert(doc.sections()[2].terms()[0][0] == "k");
+    expect(doc.add("A") is doc).to.equal(true);
+    expect(doc.add("B", "body") is doc).to.equal(true);
+    expect(doc.add("C", "body", [Term("k", "v")]) is doc).to.equal(true);
+    expect(doc.sections().length).to.equal(3);
+    expect(doc.sections()[0].title).to.equal("A");
+    expect(doc.sections()[0].body).to.beNull;
+    expect(doc.sections()[1].title).to.equal("B");
+    expect(doc.sections()[1].body).to.equal("body");
+    expect(doc.sections()[2].title).to.equal("C");
+    expect(doc.sections()[2].terms().length).to.equal(1);
+    expect(doc.sections()[2].terms()[0][0]).to.equal("k");
 }
 
 unittest {
     auto doc = new Document();
-    assertThrown!AssertError(doc.add(cast(string) null));
+    expect({ doc.add(cast(string) null); }).to.throwException!AssertError;
 }
 
 unittest {
@@ -90,21 +92,21 @@ unittest {
     auto first = new Section("A");
     doc.add(first);
     doc.add("B");
-    assert(doc.section("A") is first);
-    assert(doc.section("B") !is null);
-    assert(doc.section("B").title == "B");
-    assert(doc.section("C") is null);
-    assert(doc.section("a") is null);
+    expect(doc.section("A") is first).to.equal(true);
+    expect(doc.section("B") is null).to.equal(false);
+    expect(doc.section("B").title).to.equal("B");
+    expect(doc.section("C") is null).to.equal(true);
+    expect(doc.section("a") is null).to.equal(true);
 }
 
 unittest {
     auto doc = new Document();
     doc.add(bold("Usage:"), "app");
-    assert(doc.section("Usage:") !is null);
-    assert(doc.section("Usage:").title == bold("Usage:"));
-    assert(doc.section(bold("Usage:")) !is null);
-    assert(doc.section(dim("Usage:")) !is null);
-    assert(doc.section("Usage") is null);
+    expect(doc.section("Usage:") is null).to.equal(false);
+    expect(doc.section("Usage:").title).to.equal(bold("Usage:"));
+    expect(doc.section(bold("Usage:")) is null).to.equal(false);
+    expect(doc.section(dim("Usage:")) is null).to.equal(false);
+    expect(doc.section("Usage") is null).to.equal(true);
 }
 
 unittest {
@@ -113,25 +115,25 @@ unittest {
     auto second = new Section("Same");
     doc.add(first);
     doc.add(second);
-    assert(doc.section("Same") is first);
+    expect(doc.section("Same") is first).to.equal(true);
 }
 
 unittest {
     auto doc = new Document();
     doc.add("Options:");
-    assert(doc.add("Options:", Term("a", "first")) is doc);
-    assert(doc.add("Options:", "b", "second") is doc);
-    assert(doc.section("Options:").terms().length == 2);
-    assert(doc.section("Options:").terms()[0][0] == "a");
-    assert(doc.section("Options:").terms()[1][0] == "b");
-    assert(doc.section("Options:").terms()[1][1] == "second");
+    expect(doc.add("Options:", Term("a", "first")) is doc).to.equal(true);
+    expect(doc.add("Options:", "b", "second") is doc).to.equal(true);
+    expect(doc.section("Options:").terms().length).to.equal(2);
+    expect(doc.section("Options:").terms()[0][0]).to.equal("a");
+    expect(doc.section("Options:").terms()[1][0]).to.equal("b");
+    expect(doc.section("Options:").terms()[1][1]).to.equal("second");
 }
 
 unittest {
     auto doc = new Document();
     doc.add(bold("Options:"));
     doc.add("Options:", "a", "first");
-    assert(doc.section("Options:").terms().length == 1);
+    expect(doc.section("Options:").terms().length).to.equal(1);
 }
 
 unittest {
@@ -141,38 +143,38 @@ unittest {
     doc.add(first);
     doc.add(second);
     doc.add("Same", "a", "first");
-    assert(first.terms().length == 1);
-    assert(second.terms().length == 0);
+    expect(first.terms().length).to.equal(1);
+    expect(second.terms().length).to.equal(0);
 }
 
 unittest {
     auto doc = new Document();
     doc.add("A");
-    assertThrown!AssertError(doc.add("Missing", Term("a", "b")));
-    assertThrown!AssertError(doc.add("Missing", "a", "b"));
+    expect({ doc.add("Missing", Term("a", "b")); }).to.throwException!AssertError;
+    expect({ doc.add("Missing", "a", "b"); }).to.throwException!AssertError;
 }
 
 unittest {
     auto doc = new Document();
-    assert(captureStdout({ doc.print(); }) == "");
+    expect(captureStdout({ doc.print(); })).to.equal("");
 }
 
 unittest {
     auto doc = new Document();
     doc.add("Title");
-    assert(captureStdout({ doc.print(); }) == "Title\n");
+    expect(captureStdout({ doc.print(); })).to.equal("Title\n");
 }
 
 unittest {
     auto doc = new Document();
     doc.add("Description:", "Does things");
-    assert(captureStdout({ doc.print(); }) == "Description:\n  Does things\n");
+    expect(captureStdout({ doc.print(); })).to.equal("Description:\n  Does things\n");
 }
 
 unittest {
     auto doc = new Document();
     doc.add("Title", "");
-    assert(captureStdout({ doc.print(); }) == "Title\n  \n");
+    expect(captureStdout({ doc.print(); })).to.equal("Title\n  \n");
 }
 
 unittest {
@@ -181,13 +183,13 @@ unittest {
     auto expected = "Commands:\n"
         ~ "  run" ~ sp(4) ~ "Run it\n"
         ~ "  build" ~ sp(2) ~ "Build it\n";
-    assert(captureStdout({ doc.print(); }) == expected);
+    expect(captureStdout({ doc.print(); })).to.equal(expected);
 }
 
 unittest {
     auto doc = new Document();
     doc.add("Title", "Body", [Term("a", "x")]);
-    assert(captureStdout({ doc.print(); }) == "Title\n  Body\n  a" ~ sp(2) ~ "x\n");
+    expect(captureStdout({ doc.print(); })).to.equal("Title\n  Body\n  a" ~ sp(2) ~ "x\n");
 }
 
 unittest {
@@ -200,7 +202,7 @@ unittest {
         ~ "Commands:\n"
         ~ "  run" ~ sp(4) ~ "Run it\n"
         ~ "  build" ~ sp(2) ~ "Build it\n";
-    assert(captureStdout({ doc.print(); }) == expected);
+    expect(captureStdout({ doc.print(); })).to.equal(expected);
 }
 
 unittest {
@@ -212,7 +214,7 @@ unittest {
         ~ "\n"
         ~ "B\n"
         ~ "  longer" ~ sp(2) ~ "y\n";
-    assert(captureStdout({ doc.print(); }) == expected);
+    expect(captureStdout({ doc.print(); })).to.equal(expected);
 }
 
 unittest {
@@ -221,7 +223,7 @@ unittest {
     auto expected = bold("Opts:") ~ "\n"
         ~ "  " ~ bold("ab") ~ sp(4) ~ "x\n"
         ~ "  abcd" ~ sp(2) ~ "y\n";
-    assert(captureStdout({ doc.print(); }) == expected);
+    expect(captureStdout({ doc.print(); })).to.equal(expected);
 }
 
 unittest {
@@ -229,7 +231,7 @@ unittest {
     doc.add("A");
     doc.add("B");
     doc.add("C");
-    assert(captureStdout({ doc.print(); }) == "A\n\nB\n\nC\n");
+    expect(captureStdout({ doc.print(); })).to.equal("A\n\nB\n\nC\n");
 }
 
 unittest {
@@ -240,7 +242,7 @@ unittest {
     auto expected = "Options:\n"
         ~ "  a" ~ sp(3) ~ "first\n"
         ~ "  bb" ~ sp(2) ~ "second\n";
-    assert(captureStdout({ doc.print(); }) == expected);
+    expect(captureStdout({ doc.print(); })).to.equal(expected);
 }
 
 unittest {
@@ -248,5 +250,5 @@ unittest {
     doc.add("Title", "Body", [Term("a", "x")]);
     auto once = captureStdout({ doc.print(); });
     auto twice = captureStdout({ doc.print(); });
-    assert(once == twice);
+    expect(once).to.equal(twice);
 }

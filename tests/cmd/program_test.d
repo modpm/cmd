@@ -1,24 +1,25 @@
 module cmd.program_test;
 
 import core.exception : AssertError;
-import std.exception : assertThrown;
+
+import fluent.asserts;
 
 import cmd.flag;
 import cmd.program;
 import cmd.test_support;
 
 unittest {
-    assertThrown!AssertError(new Program("app").versionOption("--version", "d"));
-    assertThrown!AssertError(new Program("app").versionOption(new Flag(null, "version", "d")));
+    expect({ new Program("app").versionOption("--version", "d"); }).to.throwException!AssertError;
+    expect({ new Program("app").versionOption(new Flag(null, "version", "d")); }).to.throwException!AssertError;
 }
 
 unittest {
     auto program = new Program("app").versionString("1.0.0");
-    assert(captureStdout({ assert(program.printVersion() == 0); }) == "1.0.0\n");
+    expect(captureStdout({ expect(program.printVersion()).to.equal(0); })).to.equal("1.0.0\n");
 }
 
 unittest {
-    assertThrown!AssertError(new Program("app").printVersion());
+    expect({ new Program("app").printVersion(); }).to.throwException!AssertError;
 }
 
 unittest {
@@ -27,11 +28,11 @@ unittest {
     program.helpOption("-h, --help", "d");
 
     auto none = parseOk(program);
-    assert(none.program is program);
-    assert(none.command is program);
-    assert(!none.hasFlag("version"));
-    assert(!none.hasFlag("help"));
-    assert(!none.hasFlag("verbose"));
+    expect(none.program is program).to.equal(true);
+    expect(none.command is program).to.equal(true);
+    expect(none.hasFlag("version")).to.equal(false);
+    expect(none.hasFlag("help")).to.equal(false);
+    expect(none.hasFlag("verbose")).to.equal(false);
 
-    assert(parseOk(program, "-v").hasFlag("verbose"));
+    expect(parseOk(program, "-v").hasFlag("verbose")).to.equal(true);
 }

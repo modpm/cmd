@@ -1,7 +1,9 @@
 module cmd.parsed_args_test;
 
 import core.exception : AssertError;
-import std.exception : assertThrown, collectException;
+import std.exception : collectException;
+
+import fluent.asserts;
 
 import cmd.argument;
 import cmd.command;
@@ -17,10 +19,10 @@ private ParsedArgs blank(const(Command) command) {
 unittest {
     auto parsed = blank(new Command("c"));
     auto flag = new Flag("v", "verbose", "d");
-    assert(!parsed.hasFlag("verbose"));
-    assert(!parsed.hasFlag(flag));
-    assert(parsed.flag("verbose") == 0);
-    assert(parsed.flag(flag) == 0);
+    expect(parsed.hasFlag("verbose")).to.equal(false);
+    expect(parsed.hasFlag(flag)).to.equal(false);
+    expect(parsed.flag("verbose")).to.equal(0);
+    expect(parsed.flag(flag)).to.equal(0);
 }
 
 unittest {
@@ -28,13 +30,13 @@ unittest {
     auto flag = new Flag("v", "verbose", "d");
     parsed.setFlag(flag, 3);
     foreach (name; ["verbose", "v", "-v", "--verbose"]) {
-        assert(parsed.hasFlag(name));
-        assert(parsed.flag(name) == 3);
+        expect(parsed.hasFlag(name)).to.equal(true);
+        expect(parsed.flag(name)).to.equal(3);
     }
-    assert(parsed.hasFlag(flag));
-    assert(parsed.flag(flag) == 3);
-    assert(!parsed.hasFlag("other"));
-    assert(parsed.flag("other") == 0);
+    expect(parsed.hasFlag(flag)).to.equal(true);
+    expect(parsed.flag(flag)).to.equal(3);
+    expect(parsed.hasFlag("other")).to.equal(false);
+    expect(parsed.flag("other")).to.equal(0);
 }
 
 unittest {
@@ -42,12 +44,12 @@ unittest {
     auto flag = new Flag("v", "verbose", "d");
     parsed.setFlag(flag, 1);
     parsed.setFlag(flag, 2);
-    assert(parsed.flag(flag) == 2);
+    expect(parsed.flag(flag)).to.equal(2);
     parsed.setFlag(flag, 0);
-    assert(!parsed.hasFlag(flag));
-    assert(!parsed.hasFlag("verbose"));
-    assert(!parsed.hasFlag("v"));
-    assert(parsed.flag(flag) == 0);
+    expect(parsed.hasFlag(flag)).to.equal(false);
+    expect(parsed.hasFlag("verbose")).to.equal(false);
+    expect(parsed.hasFlag("v")).to.equal(false);
+    expect(parsed.flag(flag)).to.equal(0);
 }
 
 unittest {
@@ -56,38 +58,38 @@ unittest {
     auto onlyShort = new Flag("s", null, "d");
     parsed.setFlag(onlyLong, 1);
     parsed.setFlag(onlyShort, 2);
-    assert(parsed.hasFlag("only"));
-    assert(parsed.hasFlag("--only"));
-    assert(parsed.hasFlag(onlyLong));
-    assert(parsed.flag(onlyLong) == 1);
-    assert(parsed.hasFlag("s"));
-    assert(parsed.hasFlag("-s"));
-    assert(parsed.hasFlag(onlyShort));
-    assert(parsed.flag(onlyShort) == 2);
+    expect(parsed.hasFlag("only")).to.equal(true);
+    expect(parsed.hasFlag("--only")).to.equal(true);
+    expect(parsed.hasFlag(onlyLong)).to.equal(true);
+    expect(parsed.flag(onlyLong)).to.equal(1);
+    expect(parsed.hasFlag("s")).to.equal(true);
+    expect(parsed.hasFlag("-s")).to.equal(true);
+    expect(parsed.hasFlag(onlyShort)).to.equal(true);
+    expect(parsed.flag(onlyShort)).to.equal(2);
 }
 
 unittest {
     auto parsed = blank(new Command("c"));
     auto option = new Option("t", "target", "name", "d", true);
-    assert(!parsed.hasOption(option));
-    assert(!parsed.hasOption("target"));
+    expect(parsed.hasOption(option)).to.equal(false);
+    expect(parsed.hasOption("target")).to.equal(false);
     parsed.setOption(option, ["a", "b"]);
-    assert(parsed.hasOption(option));
+    expect(parsed.hasOption(option)).to.equal(true);
     foreach (name; ["target", "t", "-t", "--target"]) {
-        assert(parsed.hasOption(name));
-        assert(parsed.option(name) == "a");
-        assert(parsed.optionList(name) == ["a", "b"]);
+        expect(parsed.hasOption(name)).to.equal(true);
+        expect(parsed.option(name)).to.equal("a");
+        expect(parsed.optionList(name)).to.equal(["a", "b"]);
     }
-    assert(parsed.optionList(option) == ["a", "b"]);
-    assert(!parsed.hasOption("other"));
+    expect(parsed.optionList(option)).to.equal(["a", "b"]);
+    expect(parsed.hasOption("other")).to.equal(false);
 }
 
 unittest {
     auto parsed = blank(new Command("c"));
     auto option = new Option("t", "target", "name", "d", true);
     parsed.setOption(option, ["a"]);
-    assertThrown!AssertError(parsed.setOption(option, ["b"]));
-    assertThrown!AssertError(parsed.setOption(new Option("t", "target", "other", "d", true), ["b"]));
+    expect({ parsed.setOption(option, ["b"]); }).to.throwException!AssertError;
+    expect({ parsed.setOption(new Option("t", "target", "other", "d", true), ["b"]); }).to.throwException!AssertError;
 }
 
 unittest {
@@ -96,107 +98,107 @@ unittest {
     auto onlyShort = new Option("s", null, "v", "d", false);
     parsed.setOption(onlyLong, ["x"]);
     parsed.setOption(onlyShort, ["y"]);
-    assert(parsed.hasOption(onlyLong));
-    assert(parsed.hasOption("long"));
-    assert(parsed.hasOption("--long"));
-    assert(parsed.optionList(onlyLong) == ["x"]);
-    assert(parsed.hasOption(onlyShort));
-    assert(parsed.hasOption("s"));
-    assert(parsed.hasOption("-s"));
-    assert(parsed.optionList(onlyShort) == ["y"]);
+    expect(parsed.hasOption(onlyLong)).to.equal(true);
+    expect(parsed.hasOption("long")).to.equal(true);
+    expect(parsed.hasOption("--long")).to.equal(true);
+    expect(parsed.optionList(onlyLong)).to.equal(["x"]);
+    expect(parsed.hasOption(onlyShort)).to.equal(true);
+    expect(parsed.hasOption("s")).to.equal(true);
+    expect(parsed.hasOption("-s")).to.equal(true);
+    expect(parsed.optionList(onlyShort)).to.equal(["y"]);
 }
 
 unittest {
     auto parsed = blank(new Command("c"));
     auto missing = collectException(parsed.option("nope"));
-    assert(missing !is null);
-    assert(missing.msg == "Option 'nope' not found");
+    expect(missing).to.not.beNull;
+    expect(missing.msg).to.equal("Option 'nope' not found");
     auto missingList = collectException(parsed.optionList("nope"));
-    assert(missingList !is null);
-    assert(missingList.msg == "Option 'nope' not found");
+    expect(missingList).to.not.beNull;
+    expect(missingList.msg).to.equal("Option 'nope' not found");
 }
 
 unittest {
     auto parsed = blank(new Command("c"));
     auto option = new Option("t", "target", "name", "d", true);
     parsed.setOption(option, ["first", "second"]);
-    assert(parsed.option("target") == "first");
-    assert(parsed.option("-t") == "first");
+    expect(parsed.option("target")).to.equal("first");
+    expect(parsed.option("-t")).to.equal("first");
 }
 
 unittest {
     auto command = new Command("c").argument("<input>", "d");
     auto parsed = blank(command);
     auto argument = Argument.fromString("<input>", "d");
-    assert(!parsed.hasArgument("input"));
-    assert(!parsed.hasArgument(argument));
+    expect(parsed.hasArgument("input")).to.equal(false);
+    expect(parsed.hasArgument(argument)).to.equal(false);
     parsed.setArgument(argument, "value");
-    assert(parsed.hasArgument("input"));
-    assert(parsed.hasArgument(argument));
-    assert(parsed.argument("input") == "value");
-    assert(parsed.argumentList("input") == ["value"]);
-    assert(!parsed.hasArgument("other"));
+    expect(parsed.hasArgument("input")).to.equal(true);
+    expect(parsed.hasArgument(argument)).to.equal(true);
+    expect(parsed.argument("input")).to.equal("value");
+    expect(parsed.argumentList("input")).to.equal(["value"]);
+    expect(parsed.hasArgument("other")).to.equal(false);
 }
 
 unittest {
     auto parsed = blank(new Command("c"));
     auto argument = Argument.fromString("<input>", "d");
     parsed.setArgument(argument, "value");
-    assertThrown!AssertError(parsed.setArgument(argument, "again"));
+    expect({ parsed.setArgument(argument, "again"); }).to.throwException!AssertError;
 }
 
 unittest {
     auto parsed = blank(new Command("c"));
     auto missing = collectException(parsed.argument("nope"));
-    assert(missing !is null);
-    assert(missing.msg == "Argument 'nope' not found");
+    expect(missing).to.not.beNull;
+    expect(missing.msg).to.equal("Argument 'nope' not found");
     auto missingList = collectException(parsed.argumentList("nope"));
-    assert(missingList !is null);
-    assert(missingList.msg == "Argument 'nope' not found");
+    expect(missingList).to.not.beNull;
+    expect(missingList.msg).to.equal("Argument 'nope' not found");
 }
 
 unittest {
     auto command = new Command("c").argument("<files...>", "d");
     auto parsed = blank(command);
-    assert(!parsed.hasArgument("files"));
+    expect(parsed.hasArgument("files")).to.equal(false);
     auto missing = collectException(parsed.argumentList("files"));
-    assert(missing !is null);
-    assert(missing.msg == "Argument 'files' not found");
+    expect(missing).to.not.beNull;
+    expect(missing.msg).to.equal("Argument 'files' not found");
 
     parsed.setArgumentList(["a", "b", "c"]);
-    assert(parsed.hasArgument("files"));
-    assert(parsed.hasArgument(Argument.fromString("<files...>", "d")));
-    assert(parsed.argument("files") == "a");
-    assert(parsed.argumentList("files") == ["a", "b", "c"]);
-    assert(parsed.variadic == ["a", "b", "c"]);
+    expect(parsed.hasArgument("files")).to.equal(true);
+    expect(parsed.hasArgument(Argument.fromString("<files...>", "d"))).to.equal(true);
+    expect(parsed.argument("files")).to.equal("a");
+    expect(parsed.argumentList("files")).to.equal(["a", "b", "c"]);
+    expect(parsed.variadic).to.equal(["a", "b", "c"]);
 }
 
 unittest {
     auto command = new Command("c").argument("<files...>", "d");
     auto parsed = blank(command);
     parsed.setArgumentList(["a"]);
-    assertThrown!AssertError(parsed.setArgumentList(["b"]));
+    expect({ parsed.setArgumentList(["b"]); }).to.throwException!AssertError;
 }
 
 unittest {
     auto command = new Command("c").argument("<files...>", "d");
     auto parsed = blank(command);
     parsed.setArgumentList([]);
-    assert(!parsed.hasArgument("files"));
+    expect(parsed.hasArgument("files")).to.equal(false);
     parsed.setArgumentList(["x"]);
-    assert(parsed.hasArgument("files"));
-    assert(parsed.argumentList("files") == ["x"]);
+    expect(parsed.hasArgument("files")).to.equal(true);
+    expect(parsed.argumentList("files")).to.equal(["x"]);
 }
 
 unittest {
     auto command = new Command("c").argument("<input>", "d").argument("<files...>", "d");
     auto parsed = blank(command);
     parsed.setArgumentList(["a", "b"]);
-    assert(parsed.hasArgument("files"));
-    assert(!parsed.hasArgument("input"));
-    assert(!parsed.hasArgument("other"));
+    expect(parsed.hasArgument("files")).to.equal(true);
+    expect(parsed.hasArgument("input")).to.equal(false);
+    expect(parsed.hasArgument("other")).to.equal(false);
     parsed.setArgument(Argument.fromString("<input>", "d"), "first");
-    assert(parsed.argument("input") == "first");
-    assert(parsed.argumentList("input") == ["first"]);
-    assert(parsed.argumentList("files") == ["a", "b"]);
+    expect(parsed.argument("input")).to.equal("first");
+    expect(parsed.argumentList("input")).to.equal(["first"]);
+    expect(parsed.argumentList("files")).to.equal(["a", "b"]);
 }

@@ -2,6 +2,8 @@ module cmd.parser_test;
 
 import std.exception : collectException;
 
+import fluent.asserts;
+
 import cmd.program;
 import cmd.test_support;
 
@@ -9,38 +11,38 @@ unittest {
     Program program = new TestProgram("app").option("-v, --verbose", "Verbose");
 
     auto absent = parseOk(program);
-    assert(!absent.hasFlag("verbose"));
-    assert(absent.flag("verbose") == 0);
+    expect(absent.hasFlag("verbose")).to.equal(false);
+    expect(absent.flag("verbose")).to.equal(0);
 
     auto viaShort = parseOk(program, "-v");
     auto viaLong = parseOk(program, "--verbose");
     foreach (name; ["verbose", "v", "-v", "--verbose"]) {
-        assert(viaShort.hasFlag(name));
-        assert(viaShort.flag(name) == 1);
-        assert(viaLong.hasFlag(name));
-        assert(viaLong.flag(name) == 1);
+        expect(viaShort.hasFlag(name)).to.equal(true);
+        expect(viaShort.flag(name)).to.equal(1);
+        expect(viaLong.hasFlag(name)).to.equal(true);
+        expect(viaLong.flag(name)).to.equal(1);
     }
-    assert(!viaShort.hasFlag("other"));
+    expect(viaShort.hasFlag("other")).to.equal(false);
 }
 
 unittest {
     Program program = new TestProgram("app").option("-v, --verbose", "Verbose");
-    assert(parseOk(program, "-v", "-v").flag("verbose") == 2);
-    assert(parseOk(program, "-v", "--verbose", "-v").flag("verbose") == 3);
-    assert(parseOk(program, "--verbose", "--verbose").flag("v") == 2);
-    assert(parseOk(program, "-vvv").flag("verbose") == 3);
-    assert(parseOk(program, "-vv", "-v").flag("verbose") == 3);
+    expect(parseOk(program, "-v", "-v").flag("verbose")).to.equal(2);
+    expect(parseOk(program, "-v", "--verbose", "-v").flag("verbose")).to.equal(3);
+    expect(parseOk(program, "--verbose", "--verbose").flag("v")).to.equal(2);
+    expect(parseOk(program, "-vvv").flag("verbose")).to.equal(3);
+    expect(parseOk(program, "-vv", "-v").flag("verbose")).to.equal(3);
 }
 
 unittest {
     Program program = new TestProgram("app").option("--only-long", "d").option("-s", "d");
     auto parsed = parseOk(program, "--only-long", "-s", "-s");
-    assert(parsed.hasFlag("only-long"));
-    assert(parsed.hasFlag("--only-long"));
-    assert(parsed.flag("only-long") == 1);
-    assert(parsed.hasFlag("s"));
-    assert(parsed.hasFlag("-s"));
-    assert(parsed.flag("s") == 2);
+    expect(parsed.hasFlag("only-long")).to.equal(true);
+    expect(parsed.hasFlag("--only-long")).to.equal(true);
+    expect(parsed.flag("only-long")).to.equal(1);
+    expect(parsed.hasFlag("s")).to.equal(true);
+    expect(parsed.hasFlag("-s")).to.equal(true);
+    expect(parsed.flag("s")).to.equal(2);
 }
 
 unittest {
@@ -49,14 +51,14 @@ unittest {
         .option("-b, --brief", "d")
         .option("-c", "d");
     auto parsed = parseOk(program, "-abc");
-    assert(parsed.flag("all") == 1);
-    assert(parsed.flag("brief") == 1);
-    assert(parsed.flag("c") == 1);
+    expect(parsed.flag("all")).to.equal(1);
+    expect(parsed.flag("brief")).to.equal(1);
+    expect(parsed.flag("c")).to.equal(1);
 
     auto counted = parseOk(program, "-aab", "-a", "-c");
-    assert(counted.flag("all") == 3);
-    assert(counted.flag("brief") == 1);
-    assert(counted.flag("c") == 1);
+    expect(counted.flag("all")).to.equal(3);
+    expect(counted.flag("brief")).to.equal(1);
+    expect(counted.flag("c")).to.equal(1);
 }
 
 unittest {
@@ -96,9 +98,9 @@ unittest {
     foreach (args; [["--target", "x"], ["--target=x"], ["-t", "x"], ["-t=x"]]) {
         auto parsed = parseOk(program, args);
         foreach (name; ["target", "t", "-t", "--target"]) {
-            assert(parsed.hasOption(name));
-            assert(parsed.option(name) == "x");
-            assert(parsed.optionList(name) == ["x"]);
+            expect(parsed.hasOption(name)).to.equal(true);
+            expect(parsed.option(name)).to.equal("x");
+            expect(parsed.optionList(name)).to.equal(["x"]);
         }
     }
 }
@@ -106,38 +108,38 @@ unittest {
 unittest {
     Program program = new TestProgram("app").option("-t, --target <name>", "Target");
     auto parsed = parseOk(program, "--target", "a", "-t", "b", "--target=c", "-t=d");
-    assert(parsed.option("target") == "a");
-    assert(parsed.optionList("target") == ["a", "b", "c", "d"]);
-    assert(parsed.optionList("t") == ["a", "b", "c", "d"]);
+    expect(parsed.option("target")).to.equal("a");
+    expect(parsed.optionList("target")).to.equal(["a", "b", "c", "d"]);
+    expect(parsed.optionList("t")).to.equal(["a", "b", "c", "d"]);
 }
 
 unittest {
     Program program = new TestProgram("app").option("-t, --target <name>", "Target");
-    assert(parseOk(program, "--target=").option("target") == "");
-    assert(parseOk(program, "-t=").option("target") == "");
-    assert(parseOk(program, "--target", "").option("target") == "");
-    assert(parseOk(program, "--target=a=b").option("target") == "a=b");
-    assert(parseOk(program, "-t=a=b").option("target") == "a=b");
-    assert(parseOk(program, "--target==x").option("target") == "=x");
+    expect(parseOk(program, "--target=").option("target")).to.equal("");
+    expect(parseOk(program, "-t=").option("target")).to.equal("");
+    expect(parseOk(program, "--target", "").option("target")).to.equal("");
+    expect(parseOk(program, "--target=a=b").option("target")).to.equal("a=b");
+    expect(parseOk(program, "-t=a=b").option("target")).to.equal("a=b");
+    expect(parseOk(program, "--target==x").option("target")).to.equal("=x");
 }
 
 unittest {
     Program program = new TestProgram("app")
         .option("-t, --target <name>", "Target")
         .option("-v, --verbose", "Verbose");
-    assert(parseOk(program, "--target", "--verbose").option("target") == "--verbose");
-    assert(!parseOk(program, "--target", "--verbose").hasFlag("verbose"));
-    assert(parseOk(program, "-t", "-5").option("target") == "-5");
-    assert(parseOk(program, "-t", "-v").option("t") == "-v");
+    expect(parseOk(program, "--target", "--verbose").option("target")).to.equal("--verbose");
+    expect(parseOk(program, "--target", "--verbose").hasFlag("verbose")).to.equal(false);
+    expect(parseOk(program, "-t", "-5").option("target")).to.equal("-5");
+    expect(parseOk(program, "-t", "-v").option("t")).to.equal("-v");
 }
 
 unittest {
     Program program = new TestProgram("app").option("--target [name]", "Target").option("-o [file]", "Out");
-    assert(parseOk(program, "--target", "x").option("target") == "x");
-    assert(parseOk(program, "--target=x").option("--target") == "x");
-    assert(parseOk(program, "-o", "f").option("o") == "f");
-    assert(parseOk(program, "-o=f").option("-o") == "f");
-    assert(parseOk(program, "-o", "f").hasOption("-o"));
+    expect(parseOk(program, "--target", "x").option("target")).to.equal("x");
+    expect(parseOk(program, "--target=x").option("--target")).to.equal("x");
+    expect(parseOk(program, "-o", "f").option("o")).to.equal("f");
+    expect(parseOk(program, "-o=f").option("-o")).to.equal("f");
+    expect(parseOk(program, "-o", "f").hasOption("-o")).to.equal(true);
 }
 
 unittest {
@@ -169,7 +171,7 @@ unittest {
         .option("-b, --second <x>", "d");
     assertFails(program, "missing required option '-a, --first <x>'");
     assertFails(program, "missing required option '-b, --second <x>'", "--first", "1");
-    assert(parseOk(program, "--first", "1", "--second", "2").option("second") == "2");
+    expect(parseOk(program, "--first", "1", "--second", "2").option("second")).to.equal("2");
 }
 
 unittest {
@@ -178,34 +180,34 @@ unittest {
         .option("-c, --config [file]", "Config");
 
     auto absent = parseOk(program);
-    assert(absent.hasOption("port"));
-    assert(absent.option("port") == "8080");
-    assert(absent.option("p") == "8080");
-    assert(absent.optionList("port") == ["8080"]);
-    assert(!absent.hasOption("config"));
-    assert(!absent.hasOption("c"));
+    expect(absent.hasOption("port")).to.equal(true);
+    expect(absent.option("port")).to.equal("8080");
+    expect(absent.option("p")).to.equal("8080");
+    expect(absent.optionList("port")).to.equal(["8080"]);
+    expect(absent.hasOption("config")).to.equal(false);
+    expect(absent.hasOption("c")).to.equal(false);
     auto missing = collectException(absent.option("config"));
-    assert(missing !is null);
-    assert(missing.msg == "Option 'config' not found");
+    expect(missing).to.not.beNull;
+    expect(missing.msg).to.equal("Option 'config' not found");
 }
 
 unittest {
     Program program = new TestProgram("app")
         .option("-p, --port [number]", "Port", "8080");
     auto overridden = parseOk(program, "-p", "9");
-    assert(overridden.option("port") == "9");
-    assert(overridden.optionList("port") == ["9"]);
+    expect(overridden.option("port")).to.equal("9");
+    expect(overridden.optionList("port")).to.equal(["9"]);
 
     auto repeated = parseOk(program, "-p", "1", "--port=2");
-    assert(repeated.optionList("port") == ["1", "2"]);
+    expect(repeated.optionList("port")).to.equal(["1", "2"]);
 }
 
 unittest {
     Program program = new TestProgram("app")
         .option("-c, --config [file]", "Config");
     auto parsed = parseOk(program, "--config", "x.toml");
-    assert(parsed.hasOption("config"));
-    assert(parsed.option("config") == "x.toml");
+    expect(parsed.hasOption("config")).to.equal(true);
+    expect(parsed.option("config")).to.equal("x.toml");
 }
 
 unittest {
@@ -214,18 +216,18 @@ unittest {
         .argument("[output]", "Output");
 
     auto both = parseOk(program, "in", "out");
-    assert(both.hasArgument("input"));
-    assert(both.hasArgument("output"));
-    assert(both.argument("input") == "in");
-    assert(both.argument("output") == "out");
-    assert(both.argumentList("input") == ["in"]);
+    expect(both.hasArgument("input")).to.equal(true);
+    expect(both.hasArgument("output")).to.equal(true);
+    expect(both.argument("input")).to.equal("in");
+    expect(both.argument("output")).to.equal("out");
+    expect(both.argumentList("input")).to.equal(["in"]);
 
     auto onlyRequired = parseOk(program, "in");
-    assert(onlyRequired.argument("input") == "in");
-    assert(!onlyRequired.hasArgument("output"));
+    expect(onlyRequired.argument("input")).to.equal("in");
+    expect(onlyRequired.hasArgument("output")).to.equal(false);
     auto missing = collectException(onlyRequired.argument("output"));
-    assert(missing !is null);
-    assert(missing.msg == "Argument 'output' not found");
+    expect(missing).to.not.beNull;
+    expect(missing.msg).to.equal("Argument 'output' not found");
 }
 
 unittest {
@@ -237,7 +239,7 @@ unittest {
 unittest {
     Program program = new TestProgram("app");
     assertFails(program, "unexpected argument 'x'", "x");
-    assert(parseOk(program).command is program);
+    expect(parseOk(program).command is program).to.equal(true);
 }
 
 unittest {
@@ -247,17 +249,17 @@ unittest {
     assertFails(program, "missing required argument 'b'", "x");
     assertFails(program, "missing required argument 'a'");
     auto parsed = parseOk(program, "x", "y");
-    assert(parsed.argument("a") == "x");
-    assert(parsed.argument("b") == "y");
+    expect(parsed.argument("a")).to.equal("x");
+    expect(parsed.argument("b")).to.equal("y");
 }
 
 unittest {
     Program program = new TestProgram("app")
         .argument("[output]", "Output", "out.txt");
     auto absent = parseOk(program);
-    assert(absent.hasArgument("output"));
-    assert(absent.argument("output") == "out.txt");
-    assert(parseOk(program, "x.txt").argument("output") == "x.txt");
+    expect(absent.hasArgument("output")).to.equal(true);
+    expect(absent.argument("output")).to.equal("out.txt");
+    expect(parseOk(program, "x.txt").argument("output")).to.equal("x.txt");
 }
 
 unittest {
@@ -266,36 +268,36 @@ unittest {
         .argument("<second>", "d");
     assertFails(program, "missing required argument 'second'", "x");
     auto parsed = parseOk(program, "x", "y");
-    assert(parsed.argument("first") == "x");
-    assert(parsed.argument("second") == "y");
+    expect(parsed.argument("first")).to.equal("x");
+    expect(parsed.argument("second")).to.equal("y");
 }
 
 unittest {
     Program program = new TestProgram("app").argument("<files...>", "Files");
     auto many = parseOk(program, "a", "b", "c");
-    assert(many.hasArgument("files"));
-    assert(many.argument("files") == "a");
-    assert(many.argumentList("files") == ["a", "b", "c"]);
-    assert(parseOk(program, "a").argumentList("files") == ["a"]);
+    expect(many.hasArgument("files")).to.equal(true);
+    expect(many.argument("files")).to.equal("a");
+    expect(many.argumentList("files")).to.equal(["a", "b", "c"]);
+    expect(parseOk(program, "a").argumentList("files")).to.equal(["a"]);
     assertFails(program, "missing required argument 'files'");
 }
 
 unittest {
     Program program = new TestProgram("app").argument("[files...]", "Files");
     auto many = parseOk(program, "a", "b");
-    assert(many.argumentList("files") == ["a", "b"]);
+    expect(many.argumentList("files")).to.equal(["a", "b"]);
     auto none = parseOk(program);
-    assert(!none.hasArgument("files"));
+    expect(none.hasArgument("files")).to.equal(false);
     auto missing = collectException(none.argumentList("files"));
-    assert(missing !is null);
-    assert(missing.msg == "Argument 'files' not found");
+    expect(missing).to.not.beNull;
+    expect(missing.msg).to.equal("Argument 'files' not found");
 }
 
 unittest {
     Program program = new TestProgram("app").argument("[files...]", "Files", "default.txt");
-    assert(parseOk(program).argumentList("files") == ["default.txt"]);
-    assert(parseOk(program).argument("files") == "default.txt");
-    assert(parseOk(program, "a", "b").argumentList("files") == ["a", "b"]);
+    expect(parseOk(program).argumentList("files")).to.equal(["default.txt"]);
+    expect(parseOk(program).argument("files")).to.equal("default.txt");
+    expect(parseOk(program, "a", "b").argumentList("files")).to.equal(["a", "b"]);
 }
 
 unittest {
@@ -303,13 +305,13 @@ unittest {
         .argument("<command>", "d")
         .argument("[rest...]", "d");
     auto parsed = parseOk(program, "run", "a", "b", "c");
-    assert(parsed.argument("command") == "run");
-    assert(parsed.argumentList("rest") == ["a", "b", "c"]);
-    assert(parsed.argumentList("command") == ["run"]);
+    expect(parsed.argument("command")).to.equal("run");
+    expect(parsed.argumentList("rest")).to.equal(["a", "b", "c"]);
+    expect(parsed.argumentList("command")).to.equal(["run"]);
 
     auto single = parseOk(program, "run");
-    assert(single.argument("command") == "run");
-    assert(!single.hasArgument("rest"));
+    expect(single.argument("command")).to.equal("run");
+    expect(single.hasArgument("rest")).to.equal(false);
 
     assertFails(program, "missing required argument 'command'");
 }
@@ -321,17 +323,17 @@ unittest {
         .argument("<input>", "d")
         .argument("[files...]", "d");
     auto parsed = parseOk(program, "a", "-v", "b", "--target", "x", "c", "-t=y", "d");
-    assert(parsed.hasFlag("verbose"));
-    assert(parsed.optionList("target") == ["x", "y"]);
-    assert(parsed.argument("input") == "a");
-    assert(parsed.argumentList("files") == ["b", "c", "d"]);
+    expect(parsed.hasFlag("verbose")).to.equal(true);
+    expect(parsed.optionList("target")).to.equal(["x", "y"]);
+    expect(parsed.argument("input")).to.equal("a");
+    expect(parsed.argumentList("files")).to.equal(["b", "c", "d"]);
 }
 
 unittest {
     Program program = new TestProgram("app").argument("<value>", "d");
     auto parsed = parseOk(program, "");
-    assert(parsed.hasArgument("value"));
-    assert(parsed.argument("value") == "");
+    expect(parsed.hasArgument("value")).to.equal(true);
+    expect(parsed.argument("value")).to.equal("");
 }
 
 unittest {
@@ -346,8 +348,8 @@ unittest {
 unittest {
     Program program = new TestProgram("app").option("-t, --target <n>", "d");
     auto parsed = parseOk(program, "-t", "x");
-    assert(parsed.command is program);
-    assert(parsed.program is program);
+    expect(parsed.command is program).to.equal(true);
+    expect(parsed.program is program).to.equal(true);
 }
 
 unittest {
@@ -357,10 +359,10 @@ unittest {
     Program program = new TestProgram("app").command(sub);
 
     auto parsed = parseOk(program, "sub", "val", "--flag");
-    assert(parsed.command is sub);
-    assert(parsed.program is program);
-    assert(parsed.hasFlag("flag"));
-    assert(parsed.argument("x") == "val");
+    expect(parsed.command is sub).to.equal(true);
+    expect(parsed.program is program).to.equal(true);
+    expect(parsed.hasFlag("flag")).to.equal(true);
+    expect(parsed.argument("x")).to.equal("val");
 }
 
 unittest {
@@ -370,9 +372,9 @@ unittest {
     Program program = new TestProgram("app").command(sub);
 
     auto parsed = parseOk(program, "--flag", "sub", "val");
-    assert(parsed.command is sub);
-    assert(parsed.hasFlag("flag"));
-    assert(parsed.argument("x") == "val");
+    expect(parsed.command is sub).to.equal(true);
+    expect(parsed.hasFlag("flag")).to.equal(true);
+    expect(parsed.argument("x")).to.equal("val");
 }
 
 unittest {
@@ -390,7 +392,7 @@ unittest {
     Program program = new TestProgram("app").command(sub);
     assertFails(program, "unknown option '--flag'", "--flag");
     assertFails(program, "unknown option '--flag'", "sub", "--flag");
-    assert(parseOk(program).command is program);
+    expect(parseOk(program).command is program).to.equal(true);
 }
 
 unittest {
@@ -399,13 +401,13 @@ unittest {
     Program program = new TestProgram("app").command(first).command(second);
 
     auto viaFirst = parseOk(program, "first", "v");
-    assert(viaFirst.command is first);
-    assert(viaFirst.argument("x") == "v");
+    expect(viaFirst.command is first).to.equal(true);
+    expect(viaFirst.argument("x")).to.equal("v");
 
     auto viaSecond = parseOk(program, "second", "--flag");
-    assert(viaSecond.command is second);
-    assert(viaSecond.hasFlag("flag"));
-    assert(!viaSecond.hasArgument("x"));
+    expect(viaSecond.command is second).to.equal(true);
+    expect(viaSecond.hasFlag("flag")).to.equal(true);
+    expect(viaSecond.hasArgument("x")).to.equal(false);
 }
 
 unittest {
@@ -416,9 +418,9 @@ unittest {
     mid.add(leaf);
 
     auto parsed = parseOk(program, "mid", "leaf", "x");
-    assert(parsed.command is leaf);
-    assert(parsed.argument("v") == "x");
-    assert(parseOk(program, "mid").command is mid);
+    expect(parsed.command is leaf).to.equal(true);
+    expect(parsed.argument("v")).to.equal("x");
+    expect(parseOk(program, "mid").command is mid).to.equal(true);
     assertFails(program, "unknown command 'leaf'", "leaf");
     assertFails(program, "unknown command 'other'", "mid", "other");
     assertFails(program, "missing required argument 'v'", "mid", "leaf");
@@ -432,18 +434,18 @@ unittest {
     mid.add(leaf);
 
     auto parsed = parseOk(program, "--leaf-flag", "mid", "leaf");
-    assert(parsed.command is leaf);
-    assert(parsed.hasFlag("leaf-flag"));
+    expect(parsed.command is leaf).to.equal(true);
+    expect(parsed.hasFlag("leaf-flag")).to.equal(true);
     assertFails(program, "unknown option '--deep'", "mid", "leaf", "--deep");
 }
 
 unittest {
     Program program = new TestProgram("app").option("-p, --port <number:int>", "Port");
     foreach (value; ["0", "80", "-1", "65536", "123456789012345678901234567890"]) {
-        assert(parseOk(program, "--port", value).option("port") == value);
-        assert(parseOk(program, "-p", value).option("port") == value);
-        assert(parseOk(program, "--port=" ~ value).option("port") == value);
-        assert(parseOk(program, "-p=" ~ value).option("port") == value);
+        expect(parseOk(program, "--port", value).option("port")).to.equal(value);
+        expect(parseOk(program, "-p", value).option("port")).to.equal(value);
+        expect(parseOk(program, "--port=" ~ value).option("port")).to.equal(value);
+        expect(parseOk(program, "-p=" ~ value).option("port")).to.equal(value);
     }
 }
 
@@ -461,14 +463,14 @@ unittest {
 
 unittest {
     Program program = new TestProgram("app").option("-p, --port [number:int]", "Port");
-    assert(parseOk(program, "-p", "1", "-p", "2").optionList("port") == ["1", "2"]);
+    expect(parseOk(program, "-p", "1", "-p", "2").optionList("port")).to.equal(["1", "2"]);
     assertFails(program, "invalid value 'x' for option '--port': expected an integer", "-p", "1", "--port", "x");
 }
 
 unittest {
     Program program = new TestProgram("app").option("-f, --format <format:json|yaml>", "Format");
-    assert(parseOk(program, "--format", "json").option("format") == "json");
-    assert(parseOk(program, "-f", "yaml").option("format") == "yaml");
+    expect(parseOk(program, "--format", "json").option("format")).to.equal("json");
+    expect(parseOk(program, "-f", "yaml").option("format")).to.equal("yaml");
     assertFails(program, "invalid value 'xml' for option '--format': expected one of: json, yaml",
         "--format", "xml");
     assertFails(program, "invalid value 'JSON' for option '-f': expected one of: json, yaml", "-f", "JSON");
@@ -481,19 +483,19 @@ unittest {
         .option("--root [path:dir]", "Root")
         .option("--name [name:string]", "Name");
     auto parsed = parseOk(program, "--config", "/no/such/file", "--root", "", "--name", "-x");
-    assert(parsed.option("config") == "/no/such/file");
-    assert(parsed.option("root") == "");
-    assert(parsed.option("name") == "-x");
+    expect(parsed.option("config")).to.equal("/no/such/file");
+    expect(parsed.option("root")).to.equal("");
+    expect(parsed.option("name")).to.equal("-x");
 }
 
 unittest {
     Program program = new TestProgram("app").option("-p, --port <number:int>", "Port");
-    assert(parseOk(program, "-p", "-5").option("port") == "-5");
+    expect(parseOk(program, "-p", "-5").option("port")).to.equal("-5");
 }
 
 unittest {
     Program program = new TestProgram("app").argument("<count:int>", "Count");
-    assert(parseOk(program, "5").argument("count") == "5");
+    expect(parseOk(program, "5").argument("count")).to.equal("5");
     assertFails(program, "invalid value 'x' for argument 'count': expected an integer", "x");
     assertFails(program, "invalid value '05' for argument 'count': expected an integer", "05");
     assertFails(program, "invalid value '' for argument 'count': expected an integer", "");
@@ -501,13 +503,13 @@ unittest {
 
 unittest {
     Program program = new TestProgram("app").argument("<format:json|yaml>", "Format");
-    assert(parseOk(program, "yaml").argument("format") == "yaml");
+    expect(parseOk(program, "yaml").argument("format")).to.equal("yaml");
     assertFails(program, "invalid value 'xml' for argument 'format': expected one of: json, yaml", "xml");
 }
 
 unittest {
     Program program = new TestProgram("app").argument("[ids:int...]", "Ids");
-    assert(parseOk(program, "1", "2", "3").argumentList("ids") == ["1", "2", "3"]);
+    expect(parseOk(program, "1", "2", "3").argumentList("ids")).to.equal(["1", "2", "3"]);
     assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "x");
     assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "1", "x");
     assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "1", "2", "x");
@@ -518,8 +520,8 @@ unittest {
         .argument("<name>", "Name")
         .argument("[ids:int...]", "Ids");
     auto parsed = parseOk(program, "5", "1", "2");
-    assert(parsed.argument("name") == "5");
-    assert(parsed.argumentList("ids") == ["1", "2"]);
+    expect(parsed.argument("name")).to.equal("5");
+    expect(parsed.argumentList("ids")).to.equal(["1", "2"]);
     assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "alice", "x");
     assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "alice", "1", "x");
 }
@@ -527,48 +529,48 @@ unittest {
 unittest {
     auto sub = new TestCommand("sub").argument("<count:int>", "Count");
     Program program = new TestProgram("app").command(sub);
-    assert(parseOk(program, "sub", "3").argument("count") == "3");
+    expect(parseOk(program, "sub", "3").argument("count")).to.equal("3");
     assertFails(program, "invalid value 'x' for argument 'count': expected an integer", "sub", "x");
 }
 
 unittest {
     Program program = new TestProgram("app").option("-v, --verbose", "d").argument("<input>", "d");
     auto parsed = parseOk(program, "--", "-v");
-    assert(parsed.argument("input") == "-v");
-    assert(!parsed.hasFlag("verbose"));
+    expect(parsed.argument("input")).to.equal("-v");
+    expect(parsed.hasFlag("verbose")).to.equal(false);
 }
 
 unittest {
     Program program = new TestProgram("app").option("-v, --verbose", "d").argument("<input>", "d");
     auto parsed = parseOk(program, "-v", "--", "-x");
-    assert(parsed.flag("verbose") == 1);
-    assert(parsed.argument("input") == "-x");
+    expect(parsed.flag("verbose")).to.equal(1);
+    expect(parsed.argument("input")).to.equal("-x");
 }
 
 unittest {
     Program program = new TestProgram("app").argument("<input>", "d");
     assertFails(program, "missing required argument 'input'", "--");
-    assert(parseOk(program, "--", "x").argument("input") == "x");
-    assert(parseOk(program, "x", "--").argument("input") == "x");
+    expect(parseOk(program, "--", "x").argument("input")).to.equal("x");
+    expect(parseOk(program, "x", "--").argument("input")).to.equal("x");
 }
 
 unittest {
     Program program = new TestProgram("app");
-    assert(parseOk(program, "--").command is program);
+    expect(parseOk(program, "--").command is program).to.equal(true);
     assertFails(program, "unexpected argument 'x'", "--", "x");
 }
 
 unittest {
     Program program = new TestProgram("app").argument("[files...]", "d");
-    assert(parseOk(program, "a", "--", "-b", "--c").argumentList("files") == ["a", "-b", "--c"]);
+    expect(parseOk(program, "a", "--", "-b", "--c").argumentList("files")).to.equal(["a", "-b", "--c"]);
 }
 
 unittest {
     Program program = new TestProgram("app").argument("<input>", "d");
-    assert(parseOk(program, "--", "--").argument("input") == "--");
+    expect(parseOk(program, "--", "--").argument("input")).to.equal("--");
 
     Program variadic = new TestProgram("app").argument("[files...]", "d");
-    assert(parseOk(variadic, "a", "--", "--", "b").argumentList("files") == ["a", "--", "b"]);
+    expect(parseOk(variadic, "a", "--", "--", "b").argumentList("files")).to.equal(["a", "--", "b"]);
 }
 
 unittest {
@@ -576,8 +578,8 @@ unittest {
         .option("--target <n>", "d")
         .argument("[rest...]", "d");
     auto parsed = parseOk(program, "--target", "x", "--", "--target", "y");
-    assert(parsed.optionList("target") == ["x"]);
-    assert(parsed.argumentList("rest") == ["--target", "y"]);
+    expect(parsed.optionList("target")).to.equal(["x"]);
+    expect(parsed.argumentList("rest")).to.equal(["--target", "y"]);
     assertFails(program, "missing required option '--target <n>'", "--", "a");
 }
 
@@ -587,9 +589,9 @@ unittest {
         .option("--target <n>", "d")
         .argument("[rest...]", "d");
     auto parsed = parseOk(program, "--target", "--", "-v");
-    assert(parsed.option("target") == "--");
-    assert(parsed.hasFlag("verbose"));
-    assert(!parsed.hasArgument("rest"));
+    expect(parsed.option("target")).to.equal("--");
+    expect(parsed.hasFlag("verbose")).to.equal(true);
+    expect(parsed.hasArgument("rest")).to.equal(false);
 }
 
 unittest {
@@ -598,9 +600,9 @@ unittest {
         .versionString("1.0.0")
         .versionOption("--version", "d")
         .argument("[rest...]", "d");
-    assert(parseOk(program, "--", "--help").argumentList("rest") == ["--help"]);
-    assert(parseOk(program, "--", "-h").argumentList("rest") == ["-h"]);
-    assert(parseOk(program, "--", "--version").argumentList("rest") == ["--version"]);
+    expect(parseOk(program, "--", "--help").argumentList("rest")).to.equal(["--help"]);
+    expect(parseOk(program, "--", "-h").argumentList("rest")).to.equal(["-h"]);
+    expect(parseOk(program, "--", "--version").argumentList("rest")).to.equal(["--version"]);
 }
 
 unittest {
@@ -608,10 +610,10 @@ unittest {
     Program program = new TestProgram("app").command(sub);
 
     auto beforeName = parseOk(program, "--", "sub", "x");
-    assert(beforeName.command is sub);
-    assert(beforeName.argument("v") == "x");
+    expect(beforeName.command is sub).to.equal(true);
+    expect(beforeName.argument("v")).to.equal("x");
 
-    assert(parseOk(program, "sub", "--", "-x").argument("v") == "-x");
-    assert(parseOk(program, "--").command is program);
+    expect(parseOk(program, "sub", "--", "-x").argument("v")).to.equal("-x");
+    expect(parseOk(program, "--").command is program).to.equal(true);
     assertFails(program, "unknown command '-x'", "--", "-x");
 }

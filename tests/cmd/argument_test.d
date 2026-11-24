@@ -1,171 +1,172 @@
 module cmd.argument_test;
 
 import core.exception : AssertError;
-import std.exception : assertNotThrown, assertThrown;
+
+import fluent.asserts;
 
 import cmd.ansi;
 import cmd.argument;
 import cmd.value_type;
 
 unittest {
-    assertThrown!AssertError(new Argument("", true, false, "d"));
-    assertThrown!AssertError(new Argument("input", true, false, "d", "x"));
-    assertThrown!AssertError(new Argument("input", true, true, "d", "x"));
+    expect({ new Argument("", true, false, "d"); }).to.throwException!AssertError;
+    expect({ new Argument("input", true, false, "d", "x"); }).to.throwException!AssertError;
+    expect({ new Argument("input", true, true, "d", "x"); }).to.throwException!AssertError;
 }
 
 unittest {
     auto argument = Argument.fromString("<input>", "Input file");
-    assert(argument.name == "input");
-    assert(argument.required);
-    assert(!argument.variadic);
-    assert(argument.description == "Input file");
-    assert(argument.defaultValue is null);
+    expect(argument.name).to.equal("input");
+    expect(argument.required).to.equal(true);
+    expect(argument.variadic).to.equal(false);
+    expect(argument.description).to.equal("Input file");
+    expect(argument.defaultValue).to.beNull;
 }
 
 unittest {
     auto argument = Argument.fromString("[output]", "Output file");
-    assert(argument.name == "output");
-    assert(!argument.required);
-    assert(!argument.variadic);
+    expect(argument.name).to.equal("output");
+    expect(argument.required).to.equal(false);
+    expect(argument.variadic).to.equal(false);
 }
 
 unittest {
     auto required = Argument.fromString("<files...>", "d");
-    assert(required.name == "files");
-    assert(required.required);
-    assert(required.variadic);
+    expect(required.name).to.equal("files");
+    expect(required.required).to.equal(true);
+    expect(required.variadic).to.equal(true);
 
     auto optional = Argument.fromString("[files...]", "d");
-    assert(optional.name == "files");
-    assert(!optional.required);
-    assert(optional.variadic);
+    expect(optional.name).to.equal("files");
+    expect(optional.required).to.equal(false);
+    expect(optional.variadic).to.equal(true);
 }
 
 unittest {
     auto argument = Argument.fromString("[output]", "d", "out.txt");
-    assert(argument.defaultValue == "out.txt");
+    expect(argument.defaultValue).to.equal("out.txt");
 
     auto variadic = Argument.fromString("[files...]", "d", "a.txt");
-    assert(variadic.defaultValue == "a.txt");
+    expect(variadic.defaultValue).to.equal("a.txt");
 }
 
 unittest {
-    assert(Argument.fromString("< name >", "d").name == "name");
-    assert(Argument.fromString("<files ...>", "d").name == "files");
-    assert(Argument.fromString("<files ...>", "d").variadic);
-    assert(Argument.fromString("[ name ]", "d").name == "name");
+    expect(Argument.fromString("< name >", "d").name).to.equal("name");
+    expect(Argument.fromString("<files ...>", "d").name).to.equal("files");
+    expect(Argument.fromString("<files ...>", "d").variadic).to.equal(true);
+    expect(Argument.fromString("[ name ]", "d").name).to.equal("name");
 }
 
 unittest {
-    assertThrown!AssertError(Argument.fromString("", "d"));
-    assertThrown!AssertError(Argument.fromString("input", "d"));
-    assertThrown!AssertError(Argument.fromString("<input", "d"));
-    assertThrown!AssertError(Argument.fromString("input>", "d"));
-    assertThrown!AssertError(Argument.fromString("<input]", "d"));
-    assertThrown!AssertError(Argument.fromString("[input>", "d"));
-    assertThrown!AssertError(Argument.fromString("<>", "d"));
-    assertThrown!AssertError(Argument.fromString("[]", "d"));
-    assertThrown!AssertError(Argument.fromString("<...>", "d"));
-    assertThrown!AssertError(Argument.fromString("<input>", "d", "x"));
-    assertThrown!AssertError(Argument.fromString("<files...>", "d", "x"));
+    expect({ Argument.fromString("", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("input", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("<input", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("input>", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("<input]", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("[input>", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("<>", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("[]", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("<...>", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("<input>", "d", "x"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("<files...>", "d", "x"); }).to.throwException!AssertError;
 }
 
 unittest {
-    assert(Argument.fromString("<input>", "d").formattedName() == "<input>");
-    assert(Argument.fromString("[output]", "d").formattedName() == "[output]");
-    assert(Argument.fromString("<files...>", "d").formattedName() == "<files...>");
-    assert(Argument.fromString("[files...]", "d").formattedName() == "[files...]");
-    assert(Argument.fromString("<input>", "d").formattedName(false) == "<input>");
+    expect(Argument.fromString("<input>", "d").formattedName()).to.equal("<input>");
+    expect(Argument.fromString("[output]", "d").formattedName()).to.equal("[output]");
+    expect(Argument.fromString("<files...>", "d").formattedName()).to.equal("<files...>");
+    expect(Argument.fromString("[files...]", "d").formattedName()).to.equal("[files...]");
+    expect(Argument.fromString("<input>", "d").formattedName(false)).to.equal("<input>");
 }
 
 unittest {
     auto required = Argument.fromString("<input>", "d").formattedName(true);
-    assert(required.stripAnsi() == "<input>");
+    expect(required.stripAnsi()).to.equal("<input>");
 
     auto optional = Argument.fromString("[output]", "d").formattedName(true);
-    assert(optional.stripAnsi() == "[output]");
+    expect(optional.stripAnsi()).to.equal("[output]");
 
     auto variadic = Argument.fromString("<files...>", "d").formattedName(true);
-    assert(variadic.stripAnsi() == "<files...>");
+    expect(variadic.stripAnsi()).to.equal("<files...>");
 
     auto optionalVariadic = Argument.fromString("[files...]", "d").formattedName(true);
-    assert(optionalVariadic.stripAnsi() == "[files...]");
+    expect(optionalVariadic.stripAnsi()).to.equal("[files...]");
 }
 
 unittest {
     auto integer = ValueType.fromString("int");
     auto choice = ValueType.fromString("json|yaml");
-    assertThrown!AssertError(new Argument("count", false, false, "d", "abc", integer));
-    assertThrown!AssertError(new Argument("count", false, false, "d", "01", integer));
-    assertThrown!AssertError(new Argument("format", false, false, "d", "xml", choice));
-    assertNotThrown!AssertError(new Argument("count", false, false, "d", "5", integer));
-    assertNotThrown!AssertError(new Argument("format", false, true, "d", "yaml", choice));
+    expect({ new Argument("count", false, false, "d", "abc", integer); }).to.throwException!AssertError;
+    expect({ new Argument("count", false, false, "d", "01", integer); }).to.throwException!AssertError;
+    expect({ new Argument("format", false, false, "d", "xml", choice); }).to.throwException!AssertError;
+    expect({ new Argument("count", false, false, "d", "5", integer); }).to.not.throwException!AssertError;
+    expect({ new Argument("format", false, true, "d", "yaml", choice); }).to.not.throwException!AssertError;
 }
 
 unittest {
-    assert(Argument.fromString("<name>", "d").valueType.kind == ValueType.Kind.text);
-    assert(Argument.fromString("<name:string>", "d").valueType.kind == ValueType.Kind.text);
-    assert(Argument.fromString("<path:file>", "d").valueType.kind == ValueType.Kind.file);
-    assert(Argument.fromString("<root:dir>", "d").valueType.kind == ValueType.Kind.dir);
+    expect(Argument.fromString("<name>", "d").valueType.kind).to.equal(ValueType.Kind.text);
+    expect(Argument.fromString("<name:string>", "d").valueType.kind).to.equal(ValueType.Kind.text);
+    expect(Argument.fromString("<path:file>", "d").valueType.kind).to.equal(ValueType.Kind.file);
+    expect(Argument.fromString("<root:dir>", "d").valueType.kind).to.equal(ValueType.Kind.dir);
 }
 
 unittest {
     auto argument = Argument.fromString("<count:int>", "Count");
-    assert(argument.name == "count");
-    assert(argument.required);
-    assert(!argument.variadic);
-    assert(argument.valueType.kind == ValueType.Kind.integer);
+    expect(argument.name).to.equal("count");
+    expect(argument.required).to.equal(true);
+    expect(argument.variadic).to.equal(false);
+    expect(argument.valueType.kind).to.equal(ValueType.Kind.integer);
 }
 
 unittest {
     auto argument = Argument.fromString("[ids:int...]", "Ids");
-    assert(argument.name == "ids");
-    assert(!argument.required);
-    assert(argument.variadic);
-    assert(argument.valueType.kind == ValueType.Kind.integer);
+    expect(argument.name).to.equal("ids");
+    expect(argument.required).to.equal(false);
+    expect(argument.variadic).to.equal(true);
+    expect(argument.valueType.kind).to.equal(ValueType.Kind.integer);
 
     auto files = Argument.fromString("<files:file...>", "Files");
-    assert(files.name == "files");
-    assert(files.variadic);
-    assert(files.valueType.kind == ValueType.Kind.file);
+    expect(files.name).to.equal("files");
+    expect(files.variadic).to.equal(true);
+    expect(files.valueType.kind).to.equal(ValueType.Kind.file);
 }
 
 unittest {
     auto argument = Argument.fromString("<format:json|yaml>", "Format");
-    assert(argument.name == "format");
-    assert(argument.valueType.kind == ValueType.Kind.choice);
-    assert(argument.valueType.choices == ["json", "yaml"]);
+    expect(argument.name).to.equal("format");
+    expect(argument.valueType.kind).to.equal(ValueType.Kind.choice);
+    expect(argument.valueType.choices).to.equal(["json", "yaml"]);
 }
 
 unittest {
     auto spaced = Argument.fromString("< count : int >", "d");
-    assert(spaced.name == "count");
-    assert(spaced.valueType.kind == ValueType.Kind.integer);
+    expect(spaced.name).to.equal("count");
+    expect(spaced.valueType.kind).to.equal(ValueType.Kind.integer);
 
     auto variadic = Argument.fromString("<ids:int ...>", "d");
-    assert(variadic.name == "ids");
-    assert(variadic.variadic);
-    assert(variadic.valueType.kind == ValueType.Kind.integer);
+    expect(variadic.name).to.equal("ids");
+    expect(variadic.variadic).to.equal(true);
+    expect(variadic.valueType.kind).to.equal(ValueType.Kind.integer);
 }
 
 unittest {
-    assertThrown!AssertError(Argument.fromString("<x:float>", "d"));
-    assertThrown!AssertError(Argument.fromString("<:int>", "d"));
-    assertThrown!AssertError(Argument.fromString("[x:int]", "d", "a"));
-    assertThrown!AssertError(Argument.fromString("[x:json|yaml]", "d", "xml"));
-    assertNotThrown!AssertError(Argument.fromString("[x:int]", "d", "5"));
+    expect({ Argument.fromString("<x:float>", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("<:int>", "d"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("[x:int]", "d", "a"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("[x:json|yaml]", "d", "xml"); }).to.throwException!AssertError;
+    expect({ Argument.fromString("[x:int]", "d", "5"); }).to.not.throwException!AssertError;
 }
 
 unittest {
-    assert(Argument.fromString("<count:int>", "d").formattedName() == "<count>");
-    assert(Argument.fromString("[path:file]", "d").formattedName() == "[path]");
-    assert(Argument.fromString("[ids:int...]", "d").formattedName() == "[ids...]");
-    assert(Argument.fromString("<format:json|yaml>", "d").formattedName() == "<json|yaml>");
-    assert(Argument.fromString("<format:json|yaml...>", "d").formattedName() == "<json|yaml...>");
+    expect(Argument.fromString("<count:int>", "d").formattedName()).to.equal("<count>");
+    expect(Argument.fromString("[path:file]", "d").formattedName()).to.equal("[path]");
+    expect(Argument.fromString("[ids:int...]", "d").formattedName()).to.equal("[ids...]");
+    expect(Argument.fromString("<format:json|yaml>", "d").formattedName()).to.equal("<json|yaml>");
+    expect(Argument.fromString("<format:json|yaml...>", "d").formattedName()).to.equal("<json|yaml...>");
 }
 
 unittest {
-    assert(Argument.fromString("<count:int>", "d").formattedName(true).stripAnsi() == "<count>");
-    assert(Argument.fromString("[ids:int...]", "d").formattedName(true).stripAnsi() == "[ids...]");
-    assert(Argument.fromString("<format:json|yaml>", "d").formattedName(true).stripAnsi() == "<json|yaml>");
+    expect(Argument.fromString("<count:int>", "d").formattedName(true).stripAnsi()).to.equal("<count>");
+    expect(Argument.fromString("[ids:int...]", "d").formattedName(true).stripAnsi()).to.equal("[ids...]");
+    expect(Argument.fromString("<format:json|yaml>", "d").formattedName(true).stripAnsi()).to.equal("<json|yaml>");
 }
