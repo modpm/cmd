@@ -17,7 +17,7 @@ A simple, intuitive library for building CLI applications in D.
 - **Nested subcommands** — Supports hierarchical command structures, allowing commands to contain other commands.
 - **Flexible arguments** — Required (`<>`) and optional (`[]`) arguments with variadic support (`...`).
 - **Rich option handling** — Supports `--option=value`, `--option value`, and grouped short flags such as `-abc`
-(equivalent to `-a -b -c`).
+(equivalent to `-a -b -c`), and `--` to end option parsing.
 - **Automatic help generation** — Built-in help and usage text generation.
 - **Array collection** — Repeated options are automatically collected as arrays.
 - **Type-safe parsing** — Clean API for accessing parsed arguments and options.
