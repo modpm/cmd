@@ -308,6 +308,9 @@ public class Command {
     package ParsedArgs parse(const(string[]) args, const(Program) program) const {
         if (!subcommands.empty()) {
             auto index = args.countUntil!(a => !a.empty() && a.front() != '-');
+            const terminator = args.countUntil("--");
+            if (terminator >= 0 && (index < 0 || terminator < index))
+                index = cast(size_t) terminator + 1 < args.length ? terminator + 1 : -1;
             if (index >= 0) {
                 const(Command) cmd = findCommand(args[index]);
                 if (cmd is null)
@@ -323,9 +326,15 @@ public class Command {
         string[] variadic = [];
         uint[const(Flag)] parsedFlags = new uint[Flag];
 
+        bool endOfOptions = false;
+
         for (size_t i = 0; i < args.length; ++i) {
             string arg = args[i];
-            if (!arg.empty() && arg.front() == '-') {
+            if (!endOfOptions && arg == "--") {
+                endOfOptions = true;
+                continue;
+            }
+            if (!endOfOptions && !arg.empty() && arg.front() == '-') {
                 if (program.versionOption() !is null && program.versionOption().matches(arg))
                     exit(program.printVersion());
                 if (program.helpOption() !is null && program.helpOption().matches(arg))
