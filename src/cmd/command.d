@@ -14,6 +14,7 @@ import cmd.flag;
 import cmd.option;
 import cmd.parsed_args;
 import cmd.program;
+import cmd.value_type;
 
 /** Represents a command-line command. */
 public class Command {
@@ -328,6 +329,11 @@ public class Command {
 
         bool endOfOptions = false;
 
+        void validate(string target, string value, const(ValueType) type) {
+            if (!type.accepts(value))
+                error("invalid value '" ~ value ~ "' for " ~ target ~ ": expected " ~ type.expected(), 2);
+        }
+
         for (size_t i = 0; i < args.length; ++i) {
             string arg = args[i];
             if (!endOfOptions && arg == "--") {
@@ -378,6 +384,7 @@ public class Command {
                         value = args[++i];
                     else
                         error("missing value for option '" ~ optName ~ "'", 2);
+                    validate("option '" ~ optName ~ "'", value, option.valueType);
 
                     if (option in parsedOptions)
                         parsedOptions[option] ~= value;
@@ -390,6 +397,7 @@ public class Command {
 
             if (argIndex + 1 > arguments.length) {
                 if (!variadic.empty()) {
+                    validate("argument '" ~ arguments[$ - 1].name ~ "'", arg, arguments[$ - 1].valueType);
                     variadic ~= arg;
                     continue;
                 }
@@ -397,6 +405,7 @@ public class Command {
             }
 
             const(Argument) argument = arguments[argIndex++];
+            validate("argument '" ~ argument.name ~ "'", arg, argument.valueType);
             if (argument.variadic)
                 variadic ~= arg;
             else

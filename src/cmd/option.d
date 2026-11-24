@@ -4,11 +4,15 @@ import std.string;
 
 import cmd.ansi;
 import cmd.flag;
+import cmd.value_type;
 
 /** Represents a command-line option with a parameter. */
 public final class Option : Flag {
     /** Name of the parameter. */
     public const string paramName;
+
+    /** Type of the parameter value. */
+    public const ValueType valueType;
 
     /** Whether the option is required. */
     public const bool required;
@@ -26,26 +30,31 @@ public final class Option : Flag {
      *   description = Description of the option.
      *   required = Whether the option is required.
      *   defaultValue = Default value of the parameter, or `null`.
+     *   valueType = Type of the parameter value.
      *
      * Throws:
-     *   AssertionError if option is required and default value is not `null`.
+     *   AssertionError if option is required and default value is not `null`, or if the default value is not valid
+     *   for the value type.
      */
     public this(string shortName, string longName, string paramName, string description, bool required,
-        string defaultValue = null) @safe {
+        string defaultValue = null, ValueType valueType = ValueType.init) @safe {
         if (required)
             assert(defaultValue is null, "Required option cannot have a default value");
-                    
+        assert(defaultValue is null || valueType.accepts(defaultValue), "Default value does not match the value type");
+
         super(shortName, longName, description);
         this.paramName = paramName;
         this.required = required;
         this.defaultValue = defaultValue;
+        this.valueType = valueType;
     }
 
     /**
      * Creates an option from a formatted string.
      *
      * Format may include short name `-x` and/or long name `--name`, followed by parameter in `<>` (required) or `[]`
-     * (optional). Example: "-o, --output <file>".
+     * (optional). Example: "-o, --output <file>". The parameter name may be followed by `:` and a value type, e.g.,
+     * "-p, --port <port:int>" or "--format <format:json|yaml>".
      *
      * Params:
      *   format = Formatted string.
@@ -53,7 +62,8 @@ public final class Option : Flag {
      *   defaultValue = Default value of the parameter, or `null`.
      *
      * Throws:
-     *   AssertionError if format does not contain 2 or 3 parts, or if parameter part is not enclosed in `<>` or `[]`.
+     *   AssertionError if format does not contain 2 or 3 parts, if parameter part is not enclosed in `<>` or `[]`, if
+     *   the parameter name is empty, or if the value type is unknown.
      */
     public static Option fromString(string format, string description, string defaultValue = null) @safe {
         auto parts = format.strip().split(" ");
@@ -77,8 +87,18 @@ public final class Option : Flag {
                 shortOpt = part[1..2];
         }
 
+        const param = paramPart[1..$ - 1].strip();
+        const separator = param.indexOf(':');
+        assert(separator != 0, "Parameter name must be non-empty");
+
         return new Option(
-            shortOpt, longOpt, paramPart[1..$ - 1].strip(), description, paramPart.startsWith("<"), defaultValue
+            shortOpt,
+            longOpt,
+            separator < 0 ? param : param[0..separator].strip(),
+            description,
+            paramPart.startsWith("<"),
+            defaultValue,
+            separator < 0 ? ValueType.init : ValueType.fromString(param[separator + 1..$].strip())
         );
     }
 
@@ -90,14 +110,15 @@ public final class Option : Flag {
      *   padded = Whether to add spaces at the start if there is no short option.
      */
     public string formattedName(bool colors, bool padded = false) const nothrow @safe {
+        const label = valueType.label(paramName, colors);
         return super.formattedName(padded) ~ " " ~
             (colors
                 ? required
-                    ? "<".brightBlack() ~ paramName.dim() ~ ">".brightBlack()
-                    : "[".brightBlack() ~ paramName.dim() ~ "]".brightBlack()
+                    ? "<".brightBlack() ~ label ~ ">".brightBlack()
+                    : "[".brightBlack() ~ label ~ "]".brightBlack()
                 : required
-                    ? "<" ~ paramName ~ ">"
-                    : "[" ~ paramName ~ "]"
+                    ? "<" ~ label ~ ">"
+                    : "[" ~ label ~ "]"
             );
     }
 
