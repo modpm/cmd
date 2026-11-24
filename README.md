@@ -17,8 +17,10 @@ A simple, intuitive library for building CLI applications in D.
 - **Nested subcommands** — Supports hierarchical command structures, allowing commands to contain other commands.
 - **Flexible arguments** — Required (`<>`) and optional (`[]`) arguments with variadic support (`...`).
 - **Rich option handling** — Supports `--option=value`, `--option value`, and grouped short flags such as `-abc`
-(equivalent to `-a -b -c`).
+(equivalent to `-a -b -c`), and `--` to end option parsing.
 - **Automatic help generation** — Built-in help and usage text generation.
+- **Value types** — `int`, `file`, `dir` and choices such as `json|yaml` for options and arguments, validated while
+parsing.
 - **Array collection** — Repeated options are automatically collected as arrays.
 - **Type-safe parsing** — Clean API for accessing parsed arguments and options.
 
@@ -156,6 +158,26 @@ const string[] files = args.argumentList("files");
 
 
 **Note:** Required arguments after optional ones are technically allowed, but behave counter-intuitively and ambiguously for the user. It is strongly recommended not to use optional positional arguments before required ones—consider re-ordering the arguments, or using named parameters (options).
+
+## Value Types
+
+Options and positional arguments can declare a value type after the name:
+
+```d
+new Program("serve")
+    .option("-p, --port <number:int>", "Port number")
+    .option("--format [format:json|yaml|toml]", "Output format", "json")
+    .option("--config [path:file]", "Configuration file")
+    .argument("<root:dir>", "Document root")
+    .argument("[ids:int...]", "Identifiers")
+```
+
+- `string` — any value (default)
+- `file`, `dir` — any value
+- `int` — integer of any size, without leading zeros
+- `a|b|c` — one of the listed values
+
+Integers and choices are validated while parsing.
 
 ## Working with Subcommands
 
@@ -313,6 +335,6 @@ The `error` methods can be overridden to customise the error format.
 
 ## Licence
 
-Copyright © 2025 Zefir Kirilov.
+Copyright © 2025–2026 Zefir Kirilov.
 
 This project is licenced under the [GPL-3.0](https://github.com/modpm/cmd/blob/main/COPYING) licence.
