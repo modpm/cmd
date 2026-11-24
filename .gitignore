@@ -9,6 +9,7 @@ libcmd.dll
 libcmd.a
 libcmd.lib
 libcmd-test-*
+cmd-test-unittest
 *.exe
 *.pdb
 *.o
