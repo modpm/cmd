@@ -3,6 +3,7 @@ module cmd.argument;
 import std.string;
 
 import cmd.ansi;
+import cmd.value_type;
 
 /** Represents a command-line argument. */
 public class Argument {
@@ -21,6 +22,9 @@ public class Argument {
     /** Default value of the argument, or `null`. */
     public const string defaultValue;
 
+    /** Type of the argument value. */
+    public const ValueType valueType;
+
     /**
      * Constructs an argument.
      *
@@ -30,26 +34,32 @@ public class Argument {
      *   variadic = Whether the argument accepts multiple values.
      *   description = Description of the argument.
      *   defaultValue = Default value, or `null`.
+     *   valueType = Type of the argument value.
      *
      * Throws:
-     *   AssertionError if name is empty, or if argument is required and default value is not `null`.
+     *   AssertionError if name is empty, if argument is required and default value is not `null`, or if the default
+     *   value is not valid for the value type.
      */
-    public this(string name, bool required, bool variadic, string description, string defaultValue = null) @safe {
+    public this(string name, bool required, bool variadic, string description, string defaultValue = null,
+        ValueType valueType = ValueType.init) @safe {
         assert(!name.empty(), "Argument name must be non-empty");
         if (required)
             assert(defaultValue is null, "Required argument cannot have a default value");
+        assert(defaultValue is null || valueType.accepts(defaultValue), "Default value does not match the value type");
         this.name = name;
         this.required = required;
         this.variadic = variadic;
         this.description = description;
         this.defaultValue = defaultValue;
+        this.valueType = valueType;
     }
 
     /**
      * Creates an argument from a formatted string.
      *
-     * Format must be enclosed in `<>` (required) or `[]` (optional). Name may end with `...` to indicate variadic
-     * argument.
+     * Format must be enclosed in `<>` (required) or `[]` (optional). Name may be followed by `:` and a value type, e.g.,
+     * "<count:int>" or "<format:json|yaml>", and may end with `...` to indicate variadic argument, e.g.,
+     * "<files:file...>".
      *
      * Params:
      *   format = Formatted string.
@@ -57,7 +67,7 @@ public class Argument {
      *   defaultValue = Default value, or `null`.
      *
      * Throws:
-     *   AssertionError if format is not enclosed in `<>` or `[]`.
+     *   AssertionError if format is not enclosed in `<>` or `[]`, or if the value type is unknown.
      */
     public static Argument fromString(string format, string description, string defaultValue = null) @safe {
         assert(
@@ -69,13 +79,16 @@ public class Argument {
         const isRequired = format.startsWith("<");
         const namePart = format[1..$ - 1].strip();
         const isVariadic = namePart.endsWith("...");
+        const spec = isVariadic ? namePart[0..$ - 3].strip() : namePart;
+        const separator = spec.indexOf(':');
 
         return new Argument(
-            isVariadic ? namePart[0..$ - 3].strip() : namePart,
+            separator < 0 ? spec : spec[0..separator].strip(),
             isRequired,
             isVariadic,
             description,
-            defaultValue
+            defaultValue,
+            separator < 0 ? ValueType.init : ValueType.fromString(spec[separator + 1..$].strip())
         );
     }
 
@@ -86,11 +99,11 @@ public class Argument {
      *   colors = Whether to use colors.
      */
     public string formattedName(bool colors = false) const nothrow @safe {
-        const auto namePart = name ~ (variadic ? "..." : "");
+        const auto namePart = valueType.label(name, colors) ~ (variadic ? (colors ? "...".dim() : "...") : "");
         if (colors)
             return required
-                ? "<".brightBlack() ~ namePart.dim() ~ ">".brightBlack()
-                : "[".brightBlack() ~ namePart.dim() ~ "]".brightBlack();
+                ? "<".brightBlack() ~ namePart ~ ">".brightBlack()
+                : "[".brightBlack() ~ namePart ~ "]".brightBlack();
         return required ? "<" ~ namePart ~ ">" : "[" ~ namePart ~ "]";
     }
 }

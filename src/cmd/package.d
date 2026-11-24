@@ -9,3 +9,4 @@ public import cmd.help_command;
 public import cmd.option;
 public import cmd.parsed_args;
 public import cmd.program;
+public import cmd.value_type;
