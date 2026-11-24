@@ -328,3 +328,25 @@ unittest {
     assert(failure !is null);
     assert(failure.msg == "unknown command 'help'");
 }
+
+unittest {
+    Program program = new TestProgram("app")
+        .option("-f, --format [fmt:json|yaml]", "Output format", "json")
+        .argument("<n:int>", "Count");
+    auto expected = [
+        "Usage:",
+        "  app [options] <n>",
+        "",
+        "Arguments:",
+        "  n" ~ sp(25) ~ "Count",
+        "",
+        "Options:",
+        "  -f, --format [json|yaml]" ~ sp(2) ~ "Output format",
+    ].join("\n") ~ "\n";
+    assert(helpOf(program).stripAnsi() == expected);
+}
+
+unittest {
+    Program program = new TestProgram("app").argument("<format:json|yaml>", "d");
+    assert(program.usage() == "app <json|yaml>");
+}

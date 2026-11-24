@@ -1,10 +1,11 @@
 module cmd.argument_test;
 
 import core.exception : AssertError;
-import std.exception : assertThrown;
+import std.exception : assertNotThrown, assertThrown;
 
 import cmd.ansi;
 import cmd.argument;
+import cmd.value_type;
 
 unittest {
     assertThrown!AssertError(new Argument("", true, false, "d"));
@@ -89,4 +90,82 @@ unittest {
 
     auto optionalVariadic = Argument.fromString("[files...]", "d").formattedName(true);
     assert(optionalVariadic.stripAnsi() == "[files...]");
+}
+
+unittest {
+    auto integer = ValueType.fromString("int");
+    auto choice = ValueType.fromString("json|yaml");
+    assertThrown!AssertError(new Argument("count", false, false, "d", "abc", integer));
+    assertThrown!AssertError(new Argument("count", false, false, "d", "01", integer));
+    assertThrown!AssertError(new Argument("format", false, false, "d", "xml", choice));
+    assertNotThrown!AssertError(new Argument("count", false, false, "d", "5", integer));
+    assertNotThrown!AssertError(new Argument("format", false, true, "d", "yaml", choice));
+}
+
+unittest {
+    assert(Argument.fromString("<name>", "d").valueType.kind == ValueType.Kind.text);
+    assert(Argument.fromString("<name:string>", "d").valueType.kind == ValueType.Kind.text);
+    assert(Argument.fromString("<path:file>", "d").valueType.kind == ValueType.Kind.file);
+    assert(Argument.fromString("<root:dir>", "d").valueType.kind == ValueType.Kind.dir);
+}
+
+unittest {
+    auto argument = Argument.fromString("<count:int>", "Count");
+    assert(argument.name == "count");
+    assert(argument.required);
+    assert(!argument.variadic);
+    assert(argument.valueType.kind == ValueType.Kind.integer);
+}
+
+unittest {
+    auto argument = Argument.fromString("[ids:int...]", "Ids");
+    assert(argument.name == "ids");
+    assert(!argument.required);
+    assert(argument.variadic);
+    assert(argument.valueType.kind == ValueType.Kind.integer);
+
+    auto files = Argument.fromString("<files:file...>", "Files");
+    assert(files.name == "files");
+    assert(files.variadic);
+    assert(files.valueType.kind == ValueType.Kind.file);
+}
+
+unittest {
+    auto argument = Argument.fromString("<format:json|yaml>", "Format");
+    assert(argument.name == "format");
+    assert(argument.valueType.kind == ValueType.Kind.choice);
+    assert(argument.valueType.choices == ["json", "yaml"]);
+}
+
+unittest {
+    auto spaced = Argument.fromString("< count : int >", "d");
+    assert(spaced.name == "count");
+    assert(spaced.valueType.kind == ValueType.Kind.integer);
+
+    auto variadic = Argument.fromString("<ids:int ...>", "d");
+    assert(variadic.name == "ids");
+    assert(variadic.variadic);
+    assert(variadic.valueType.kind == ValueType.Kind.integer);
+}
+
+unittest {
+    assertThrown!AssertError(Argument.fromString("<x:float>", "d"));
+    assertThrown!AssertError(Argument.fromString("<:int>", "d"));
+    assertThrown!AssertError(Argument.fromString("[x:int]", "d", "a"));
+    assertThrown!AssertError(Argument.fromString("[x:json|yaml]", "d", "xml"));
+    assertNotThrown!AssertError(Argument.fromString("[x:int]", "d", "5"));
+}
+
+unittest {
+    assert(Argument.fromString("<count:int>", "d").formattedName() == "<count>");
+    assert(Argument.fromString("[path:file]", "d").formattedName() == "[path]");
+    assert(Argument.fromString("[ids:int...]", "d").formattedName() == "[ids...]");
+    assert(Argument.fromString("<format:json|yaml>", "d").formattedName() == "<json|yaml>");
+    assert(Argument.fromString("<format:json|yaml...>", "d").formattedName() == "<json|yaml...>");
+}
+
+unittest {
+    assert(Argument.fromString("<count:int>", "d").formattedName(true).stripAnsi() == "<count>");
+    assert(Argument.fromString("[ids:int...]", "d").formattedName(true).stripAnsi() == "[ids...]");
+    assert(Argument.fromString("<format:json|yaml>", "d").formattedName(true).stripAnsi() == "<json|yaml>");
 }

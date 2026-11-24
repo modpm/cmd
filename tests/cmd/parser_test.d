@@ -436,3 +436,182 @@ unittest {
     assert(parsed.hasFlag("leaf-flag"));
     assertFails(program, "unknown option '--deep'", "mid", "leaf", "--deep");
 }
+
+unittest {
+    Program program = new TestProgram("app").option("-p, --port <number:int>", "Port");
+    foreach (value; ["0", "80", "-1", "65536", "123456789012345678901234567890"]) {
+        assert(parseOk(program, "--port", value).option("port") == value);
+        assert(parseOk(program, "-p", value).option("port") == value);
+        assert(parseOk(program, "--port=" ~ value).option("port") == value);
+        assert(parseOk(program, "-p=" ~ value).option("port") == value);
+    }
+}
+
+unittest {
+    Program program = new TestProgram("app").option("-p, --port <number:int>", "Port");
+    foreach (value; ["abc", "", "01", "-0", "1.5", "+1", " 1"]) {
+        assertFails(program, "invalid value '" ~ value ~ "' for option '--port': expected an integer",
+            "--port", value);
+        assertFails(program, "invalid value '" ~ value ~ "' for option '-p': expected an integer", "-p", value);
+        assertFails(program, "invalid value '" ~ value ~ "' for option '--port': expected an integer",
+            "--port=" ~ value);
+        assertFails(program, "invalid value '" ~ value ~ "' for option '-p': expected an integer", "-p=" ~ value);
+    }
+}
+
+unittest {
+    Program program = new TestProgram("app").option("-p, --port [number:int]", "Port");
+    assert(parseOk(program, "-p", "1", "-p", "2").optionList("port") == ["1", "2"]);
+    assertFails(program, "invalid value 'x' for option '--port': expected an integer", "-p", "1", "--port", "x");
+}
+
+unittest {
+    Program program = new TestProgram("app").option("-f, --format <format:json|yaml>", "Format");
+    assert(parseOk(program, "--format", "json").option("format") == "json");
+    assert(parseOk(program, "-f", "yaml").option("format") == "yaml");
+    assertFails(program, "invalid value 'xml' for option '--format': expected one of: json, yaml",
+        "--format", "xml");
+    assertFails(program, "invalid value 'JSON' for option '-f': expected one of: json, yaml", "-f", "JSON");
+    assertFails(program, "invalid value '' for option '--format': expected one of: json, yaml", "--format=");
+}
+
+unittest {
+    Program program = new TestProgram("app")
+        .option("--config [path:file]", "Config")
+        .option("--root [path:dir]", "Root")
+        .option("--name [name:string]", "Name");
+    auto parsed = parseOk(program, "--config", "/no/such/file", "--root", "", "--name", "-x");
+    assert(parsed.option("config") == "/no/such/file");
+    assert(parsed.option("root") == "");
+    assert(parsed.option("name") == "-x");
+}
+
+unittest {
+    Program program = new TestProgram("app").option("-p, --port <number:int>", "Port");
+    assert(parseOk(program, "-p", "-5").option("port") == "-5");
+}
+
+unittest {
+    Program program = new TestProgram("app").argument("<count:int>", "Count");
+    assert(parseOk(program, "5").argument("count") == "5");
+    assertFails(program, "invalid value 'x' for argument 'count': expected an integer", "x");
+    assertFails(program, "invalid value '05' for argument 'count': expected an integer", "05");
+    assertFails(program, "invalid value '' for argument 'count': expected an integer", "");
+}
+
+unittest {
+    Program program = new TestProgram("app").argument("<format:json|yaml>", "Format");
+    assert(parseOk(program, "yaml").argument("format") == "yaml");
+    assertFails(program, "invalid value 'xml' for argument 'format': expected one of: json, yaml", "xml");
+}
+
+unittest {
+    Program program = new TestProgram("app").argument("[ids:int...]", "Ids");
+    assert(parseOk(program, "1", "2", "3").argumentList("ids") == ["1", "2", "3"]);
+    assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "x");
+    assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "1", "x");
+    assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "1", "2", "x");
+}
+
+unittest {
+    Program program = new TestProgram("app")
+        .argument("<name>", "Name")
+        .argument("[ids:int...]", "Ids");
+    auto parsed = parseOk(program, "5", "1", "2");
+    assert(parsed.argument("name") == "5");
+    assert(parsed.argumentList("ids") == ["1", "2"]);
+    assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "alice", "x");
+    assertFails(program, "invalid value 'x' for argument 'ids': expected an integer", "alice", "1", "x");
+}
+
+unittest {
+    auto sub = new TestCommand("sub").argument("<count:int>", "Count");
+    Program program = new TestProgram("app").command(sub);
+    assert(parseOk(program, "sub", "3").argument("count") == "3");
+    assertFails(program, "invalid value 'x' for argument 'count': expected an integer", "sub", "x");
+}
+
+unittest {
+    Program program = new TestProgram("app").option("-v, --verbose", "d").argument("<input>", "d");
+    auto parsed = parseOk(program, "--", "-v");
+    assert(parsed.argument("input") == "-v");
+    assert(!parsed.hasFlag("verbose"));
+}
+
+unittest {
+    Program program = new TestProgram("app").option("-v, --verbose", "d").argument("<input>", "d");
+    auto parsed = parseOk(program, "-v", "--", "-x");
+    assert(parsed.flag("verbose") == 1);
+    assert(parsed.argument("input") == "-x");
+}
+
+unittest {
+    Program program = new TestProgram("app").argument("<input>", "d");
+    assertFails(program, "missing required argument 'input'", "--");
+    assert(parseOk(program, "--", "x").argument("input") == "x");
+    assert(parseOk(program, "x", "--").argument("input") == "x");
+}
+
+unittest {
+    Program program = new TestProgram("app");
+    assert(parseOk(program, "--").command is program);
+    assertFails(program, "unexpected argument 'x'", "--", "x");
+}
+
+unittest {
+    Program program = new TestProgram("app").argument("[files...]", "d");
+    assert(parseOk(program, "a", "--", "-b", "--c").argumentList("files") == ["a", "-b", "--c"]);
+}
+
+unittest {
+    Program program = new TestProgram("app").argument("<input>", "d");
+    assert(parseOk(program, "--", "--").argument("input") == "--");
+
+    Program variadic = new TestProgram("app").argument("[files...]", "d");
+    assert(parseOk(variadic, "a", "--", "--", "b").argumentList("files") == ["a", "--", "b"]);
+}
+
+unittest {
+    Program program = new TestProgram("app")
+        .option("--target <n>", "d")
+        .argument("[rest...]", "d");
+    auto parsed = parseOk(program, "--target", "x", "--", "--target", "y");
+    assert(parsed.optionList("target") == ["x"]);
+    assert(parsed.argumentList("rest") == ["--target", "y"]);
+    assertFails(program, "missing required option '--target <n>'", "--", "a");
+}
+
+unittest {
+    Program program = new TestProgram("app")
+        .option("-v, --verbose", "d")
+        .option("--target <n>", "d")
+        .argument("[rest...]", "d");
+    auto parsed = parseOk(program, "--target", "--", "-v");
+    assert(parsed.option("target") == "--");
+    assert(parsed.hasFlag("verbose"));
+    assert(!parsed.hasArgument("rest"));
+}
+
+unittest {
+    Program program = new TestProgram("app")
+        .helpOption("-h, --help", "d")
+        .versionString("1.0.0")
+        .versionOption("--version", "d")
+        .argument("[rest...]", "d");
+    assert(parseOk(program, "--", "--help").argumentList("rest") == ["--help"]);
+    assert(parseOk(program, "--", "-h").argumentList("rest") == ["-h"]);
+    assert(parseOk(program, "--", "--version").argumentList("rest") == ["--version"]);
+}
+
+unittest {
+    auto sub = new TestCommand("sub").argument("<v>", "d");
+    Program program = new TestProgram("app").command(sub);
+
+    auto beforeName = parseOk(program, "--", "sub", "x");
+    assert(beforeName.command is sub);
+    assert(beforeName.argument("v") == "x");
+
+    assert(parseOk(program, "sub", "--", "-x").argument("v") == "-x");
+    assert(parseOk(program, "--").command is program);
+    assertFails(program, "unknown command '-x'", "--", "-x");
+}

@@ -1,11 +1,12 @@
 module cmd.option_test;
 
 import core.exception : AssertError;
-import std.exception : assertThrown;
+import std.exception : assertNotThrown, assertThrown;
 
 import cmd.ansi;
 import cmd.flag;
 import cmd.option;
+import cmd.value_type;
 
 unittest {
     assertThrown!AssertError(new Option("t", "target", "name", "d", true, "x"));
@@ -149,4 +150,64 @@ unittest {
     values[b] = ["y"];
     assert(values.length == 1);
     assert(values[c] == ["y"]);
+}
+
+unittest {
+    auto integer = ValueType.fromString("int");
+    auto choice = ValueType.fromString("json|yaml");
+    assertThrown!AssertError(new Option("p", "port", "n", "d", false, "abc", integer));
+    assertThrown!AssertError(new Option("p", "port", "n", "d", false, "01", integer));
+    assertThrown!AssertError(new Option("f", "format", "f", "d", false, "xml", choice));
+    assertNotThrown!AssertError(new Option("p", "port", "n", "d", false, "80", integer));
+    assertNotThrown!AssertError(new Option("f", "format", "f", "d", false, "json", choice));
+    assertNotThrown!AssertError(new Option("c", "config", "p", "d", false, "any value", ValueType.fromString("file")));
+}
+
+unittest {
+    assert(Option.fromString("--name <name>", "d").valueType.kind == ValueType.Kind.text);
+    assert(Option.fromString("--name <name:string>", "d").valueType.kind == ValueType.Kind.text);
+    assert(Option.fromString("--config [path:file]", "d").valueType.kind == ValueType.Kind.file);
+    assert(Option.fromString("--root <path:dir>", "d").valueType.kind == ValueType.Kind.dir);
+}
+
+unittest {
+    auto option = Option.fromString("-p, --port <number:int>", "Port");
+    assert(option.shortName == "p");
+    assert(option.longName == "port");
+    assert(option.paramName == "number");
+    assert(option.valueType.kind == ValueType.Kind.integer);
+    assert(option.required);
+}
+
+unittest {
+    auto option = Option.fromString("--format [format:json|yaml|toml]", "Format", "json");
+    assert(option.paramName == "format");
+    assert(option.valueType.kind == ValueType.Kind.choice);
+    assert(option.valueType.choices == ["json", "yaml", "toml"]);
+    assert(!option.required);
+    assert(option.defaultValue == "json");
+}
+
+unittest {
+    assertThrown!AssertError(Option.fromString("--port <n:float>", "d"));
+    assertThrown!AssertError(Option.fromString("--port <n:json>", "d"));
+    assertThrown!AssertError(Option.fromString("--port <:int>", "d"));
+    assertThrown!AssertError(Option.fromString("--port [n:int]", "d", "x"));
+    assertThrown!AssertError(Option.fromString("--format [f:json|yaml]", "d", "xml"));
+    assertNotThrown!AssertError(Option.fromString("--port [n:int]", "d", "80"));
+}
+
+unittest {
+    assert(Option.fromString("-p, --port <number:int>", "d").formattedName() == "-p, --port <number>");
+    assert(Option.fromString("--config [path:file]", "d").formattedName() == "--config [path]");
+    assert(Option.fromString("-f, --format [format:json|yaml]", "d").formattedName() == "-f, --format [json|yaml]");
+    assert(Option.fromString("--format <format:json|yaml>", "d").formattedName(false, true)
+        == "    --format <json|yaml>");
+}
+
+unittest {
+    assert(Option.fromString("-p, --port <number:int>", "d").formattedName(true, false).stripAnsi()
+        == "-p, --port <number>");
+    assert(Option.fromString("-f, --format [format:json|yaml]", "d").formattedName(true, false).stripAnsi()
+        == "-f, --format [json|yaml]");
 }
