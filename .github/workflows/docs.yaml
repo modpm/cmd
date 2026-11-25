@@ -3,6 +3,7 @@ name: Docs
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   docs:
@@ -13,6 +14,9 @@ jobs:
       contents: read
       id-token: write
       pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -32,6 +36,10 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: docs
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
