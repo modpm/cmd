@@ -3,6 +3,7 @@ module cmd;
 public import cmd.ansi;
 public import cmd.argument;
 public import cmd.command;
+public import cmd.completion_command;
 public import cmd.document;
 public import cmd.flag;
 public import cmd.help_command;
