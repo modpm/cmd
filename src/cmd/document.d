@@ -33,7 +33,7 @@ public class Section {
      *   body = Main body text of the section, or `null`.
      *   terms = Terms and definitions associated with the section.
      * Throws:
-     *   AssertionError if the title is null.
+     *   AssertError if the title is null.
      */
     public this(string title, string body = null, Term[] terms = []) @safe {
         assert(title !is null, "Section title cannot be null");
