@@ -48,8 +48,9 @@ package final class NuCompletion {
                         ~ "    }\n\n"
                     );
                     return "string@" ~ quote(name);
-                case ValueType.Kind.text:
                 case ValueType.Kind.integer:
+                    return "int";
+                case ValueType.Kind.text:
                     return "string";
             }
         }
