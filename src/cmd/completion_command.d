@@ -11,6 +11,7 @@ import cmd.command;
 import cmd.fish_completion;
 import cmd.nu_completion;
 import cmd.program;
+import cmd.pwsh_completion;
 import cmd.zsh_completion;
 
 /**
@@ -27,6 +28,7 @@ class CompletionCommand : Command {
         Shell("zsh", &ZshCompletion.generate),
         Shell("fish", &FishCompletion.generate),
         Shell("nu", &NuCompletion.generate),
+        Shell("pwsh", &PwshCompletion.generate),
     ];
 
     /**

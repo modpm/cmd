@@ -21,7 +21,7 @@ A simple, intuitive library for building CLI applications in D.
 - **Automatic help generation** — Built-in help and usage text generation.
 - **Value types** — `int`, `file`, `dir` and choices such as `json|yaml` for options and arguments, validated while
 parsing.
-- **Shell tab-completion** — Built-in bash, zsh, fish, and nushell script generation for tab-completions.
+- **Shell tab-completion** — Built-in bash, zsh, fish, nushell, and PowerShell script generation for tab-completions.
 - **Array collection** — Repeated options are automatically collected as arrays.
 - **Type-safe parsing** — Clean API for accessing parsed arguments and options.
 
