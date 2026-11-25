@@ -336,6 +336,8 @@ error: unknown option 'invalid-option'
 error: unexpected argument 'extra'
 error: missing required option '-t, --target <name>'
 error: missing required argument 'input'
+error: invalid value 'foo' for option '--port': expected an integer
+error: invalid value 'html' for option '--type': expected one of: json, yaml, toml
 ```
 
 You can also trigger custom errors in your command actions using the [`error(string)`](https://modpm.github.io/cmd/cmd.command.Command.error.1.html) and [`noreturn error(string, int)`](https://modpm.github.io/cmd/cmd.command.Command.error.2.html) methods on `Command`:
