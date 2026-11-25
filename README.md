@@ -308,7 +308,7 @@ $ myapp help deploy  # Show help for deploy command
 
 ## Shell Completion
 
-Add [`CompletionCommand`](https://modpm.github.io/cmd/cmd.completion_command.CompletionCommand.html) to provide a `completion` command that prints a completion script for the given shell:
+Add [`CompletionCommand`](https://modpm.github.io/cmd/cmd.completion_command.CompletionCommand.html) to provide a `completion` command that prints a completion script for the given shell, or the login shell if omitted:
 
 ```d
 // …
@@ -320,7 +320,7 @@ new Program("myapp")
 ```
 
 ```bash
-$ source <(myapp completion <shell>)
+$ source <(myapp completion [shell])
 ```
 
 Subcommands, flags, options and arguments are completed. Values are completed by [type](#value-types): choices are listed, `file` and `dir` use the shell's file and directory completion.
