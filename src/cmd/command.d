@@ -232,7 +232,7 @@ public class Command {
 
         Appender!string sb;
         sb.put(program.name());
-        if (program.versionOption() || program.helpOption())
+        if ((chain.length > 1 || !subcommands.empty()) && (program.versionOption() || program.helpOption()))
             sb.put(" "
                 ~ "[".brightBlack() ~ ((chain.length > 1 ? "global " : "") ~ "options").dim() ~ "]".brightBlack());
         if (chain.length > 1)
