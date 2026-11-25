@@ -57,7 +57,7 @@ void main(string[] argv)
 
 ### Usage
 
-```bash
+```sh
 $ ./split "hello,world,foo" --separator ","
 ["hello", "world", "foo"]
 
@@ -225,10 +225,10 @@ void main(string[] args)
 
 ### Usage
 
-```bash
-$ ./subcommands split "hello,world" --separator ","
-$ ./subcommands greet Alice --excited
-$ ./subcommands split --help  # Shows help for the split subcommand
+```sh
+./subcommands split "hello,world" --separator ","
+./subcommands greet Alice --excited
+./subcommands split --help  # Shows help for the split subcommand
 ```
 
 **Important:** A command cannot have both subcommands and arguments. Choose one pattern per command level.
@@ -301,9 +301,9 @@ new Program("myapp")
 
 ### Usage
 
-```bash
-$ myapp help         # Show help for program
-$ myapp help deploy  # Show help for deploy command
+```sh
+myapp help         # Show help for program
+myapp help deploy  # Show help for deploy command
 ```
 
 ## Shell Completion
@@ -319,8 +319,8 @@ new Program("myapp")
     .run(args);
 ```
 
-```bash
-$ source <(myapp completion [shell])
+```sh
+source <(myapp completion [shell])
 ```
 
 Subcommands, flags, options and arguments are completed. Values are completed by [type](#value-types): choices are listed, `file` and `dir` use the shell's file and directory completion.
@@ -336,6 +336,8 @@ error: unknown option 'invalid-option'
 error: unexpected argument 'extra'
 error: missing required option '-t, --target <name>'
 error: missing required argument 'input'
+error: invalid value 'foo' for option '--port': expected an integer
+error: invalid value 'html' for option '--type': expected one of: json, yaml, toml
 ```
 
 You can also trigger custom errors in your command actions using the [`error(string)`](https://modpm.github.io/cmd/cmd.command.Command.error.1.html) and [`noreturn error(string, int)`](https://modpm.github.io/cmd/cmd.command.Command.error.2.html) methods on `Command`:
