@@ -53,6 +53,8 @@ package final class BashCompletion {
         if (program.versionOption() !is null)
             globalFlags ~= names(program.versionOption());
 
+        const versionNames = program.versionOption() !is null ? names(program.versionOption()).join(" ") : "";
+
         auto load = appender!string;
         auto option = appender!string;
         auto argument = appender!string;
@@ -156,6 +158,7 @@ package final class BashCompletion {
                 continue
             fi
             if [[ $w == -* ]]; then
+                [[ " @VERSION@ " == *" $w "* ]] && return 0
                 if [[ -z $subs && $w != *=* && " $opts " == *" $w "* ]]; then
                     pending=$w
                 fi
@@ -223,6 +226,7 @@ complete -F @FN@ @NAME@
             .replace("@FN@", "_" ~ program.name().replaceAll(regex("[^A-Za-z0-9_]"), "_"))
             .replace("@NAME@", quote(program.name()))
             .replace("@PROGRAM@", program.name())
+            .replace("@VERSION@", versionNames)
             .replace("@LOAD@", load.data.stripRight())
             .replace("@OPTION@", option.data.stripRight())
             .replace("@ARGUMENT@", argument.data.stripRight());

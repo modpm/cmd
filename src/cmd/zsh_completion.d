@@ -3,6 +3,7 @@ module cmd.zsh_completion;
 import std.algorithm;
 import std.array;
 import std.conv;
+import std.range : iota;
 import std.regex;
 import std.string;
 
@@ -77,10 +78,14 @@ package final class ZshCompletion {
                 addFlag(flag);
 
             string[] specs;
-            foreach (flag; flags) {
-                const global = flag is program.helpOption() || flag is program.versionOption();
-                specs ~= spec(global ? "(- *)" : "*", names(flag), "[" ~ escape(flag.description) ~ "]");
-            }
+            const positionals = cmd.subcommands.empty() ? cmd.arguments.length : 1;
+            const exclusion = "(- *" ~ iota(1, positionals + 1).map!(n => " " ~ n.to!string).join() ~ ")";
+            foreach (flag; flags)
+                specs ~= spec(
+                    program.versionOption() !is null && names(flag) == names(program.versionOption()) ? exclusion ~ "*" : "*",
+                    names(flag),
+                    "[" ~ escape(flag.description) ~ "]"
+                );
             foreach (opt; cmd.options)
                 specs ~= spec(
                     "*",
@@ -104,7 +109,7 @@ package final class ZshCompletion {
                     name ~ "() {\n"
                     ~ "    local context state state_descr line\n"
                     ~ "    typeset -A opt_args\n\n"
-                    ~ "    _arguments -C -s -S \\\n"
+                    ~ "    _arguments -C -s -S -A '-*' \\\n"
                     ~ specs.map!(s => "        " ~ s).join(" \\\n") ~ "\n\n"
                     ~ "    case $state in\n"
                     ~ "        command)\n"

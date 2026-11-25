@@ -51,6 +51,10 @@ package final class FishCompletion {
             }
         }
 
+        const versionNames = program.versionOption() !is null
+            ? names(program.versionOption()).map!(n => quote(n)).join(" ")
+            : "";
+
         auto load = appender!string;
         auto option = appender!string;
         auto argument = appender!string;
@@ -157,6 +161,7 @@ function @FN@
                 continue
             end
             if string match -q -- '-*' $w
+                contains -- $w @VERSION@; and return
                 if test (count $subs) -eq 0; and not string match -q -- '*=*' $w; and contains -- $w $opts
                     set pending $w
                 end
@@ -232,6 +237,7 @@ complete -c @NAME@ -f -a '(@FN@)'
             .replace("@FN@", "__" ~ program.name().replaceAll(regex("[^A-Za-z0-9_]"), "_"))
             .replace("@NAME@", quote(program.name()))
             .replace("@PROGRAM@", program.name())
+            .replace("@VERSION@", versionNames)
             .replace("@LOAD@", load.data.stripRight())
             .replace("@OPTION@", option.data.stripRight())
             .replace("@ARGUMENT@", argument.data.stripRight());
