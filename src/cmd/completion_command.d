@@ -9,6 +9,7 @@ import std.stdio;
 import cmd.bash_completion;
 import cmd.command;
 import cmd.fish_completion;
+import cmd.nu_completion;
 import cmd.program;
 import cmd.zsh_completion;
 
@@ -25,6 +26,7 @@ class CompletionCommand : Command {
         Shell("bash", &BashCompletion.generate),
         Shell("zsh", &ZshCompletion.generate),
         Shell("fish", &FishCompletion.generate),
+        Shell("nu", &NuCompletion.generate),
     ];
 
     /**
