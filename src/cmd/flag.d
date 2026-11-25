@@ -33,7 +33,7 @@ public class Flag {
      *   description = Description of the flag.
      *
      * Throws:
-     *   AssertionError if both names are `null`, `shortName` not single character, or `longName` empty.
+     *   AssertError if both names are `null`, `shortName` not single character, or `longName` empty.
      */
     public this(string shortName, string longName, string description) @safe {
         assert(shortName is null || shortName.length == 1, "Short name must be a single character");
@@ -55,7 +55,7 @@ public class Flag {
      *   description = Description of the flag.
      *
      * Throws:
-     *   AssertionError if format does not contain 1 or 2 parts.
+     *   AssertError if format does not contain 1 or 2 parts.
      */
     public static Flag fromString(string format, string description) @safe {
         auto parts = format.strip().split(",");

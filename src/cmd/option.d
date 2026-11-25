@@ -33,7 +33,7 @@ public final class Option : Flag {
      *   valueType = Type of the parameter value.
      *
      * Throws:
-     *   AssertionError if option is required and default value is not `null`, or if the default value is not valid
+     *   AssertError if option is required and default value is not `null`, or if the default value is not valid
      *   for the value type.
      */
     public this(string shortName, string longName, string paramName, string description, bool required,
@@ -62,7 +62,7 @@ public final class Option : Flag {
      *   defaultValue = Default value of the parameter, or `null`.
      *
      * Throws:
-     *   AssertionError if format does not contain 2 or 3 parts, if parameter part is not enclosed in `<>` or `[]`, if
+     *   AssertError if format does not contain 2 or 3 parts, if parameter part is not enclosed in `<>` or `[]`, if
      *   the parameter name is empty, or if the value type is unknown.
      */
     public static Option fromString(string format, string description, string defaultValue = null) @safe {

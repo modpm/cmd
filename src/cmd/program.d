@@ -23,7 +23,7 @@ public class Program : Command {
      *   name = Name of the program.
      *
      * Throws:
-     *   AssertionError if the name is empty.
+     *   AssertError if the name is empty.
      */
     public this(string name) @safe {
         super(name);
@@ -94,7 +94,7 @@ public class Program : Command {
      * Adds a subcommand.
      *
      * Throws:
-     *   AssertionError if subcommand already has a chain, if this command has arguments, or if a subcommand with the
+     *   AssertError if subcommand already has a chain, if this command has arguments, or if a subcommand with the
      *   same name already exists.
      */
     public override Program add(Command cmd) @safe {
@@ -106,7 +106,7 @@ public class Program : Command {
      * Adds a subcommand.
      *
      * Throws:
-     *   AssertionError if subcommand already has a chain, if this command has arguments, or if a subcommand with the
+     *   AssertError if subcommand already has a chain, if this command has arguments, or if a subcommand with the
      *   same name already exists.
      */
     public override Program command(Command cmd) @safe {
@@ -118,7 +118,7 @@ public class Program : Command {
      * Adds an option.
      *
      * Throws:
-     *   AssertionError if an option with the same short or long name already exists.
+     *   AssertError if an option with the same short or long name already exists.
      */
     public override Program add(Option option) @safe {
         super.add(option);
@@ -129,7 +129,7 @@ public class Program : Command {
      * Adds a flag.
      *
      * Throws:
-     *   AssertionError if a flag with the same short or long name already exists.
+     *   AssertError if a flag with the same short or long name already exists.
      */
     public override Program add(Flag flag) @safe {
         super.add(flag);
@@ -153,7 +153,7 @@ public class Program : Command {
      * Adds an argument.
      *
      * Throws:
-     *   AssertionError if the command has subcommands or an argument with the same name already exists.
+     *   AssertError if the command has subcommands or an argument with the same name already exists.
      */
     public override Program add(Argument arg) @safe {
         super.add(arg);
@@ -169,7 +169,7 @@ public class Program : Command {
      *   defaultValue = Default value of the argument, or `null`.
      *
      * Throws:
-     *   AssertionError if the argument format is invalid or an argument with the same name already exists.
+     *   AssertError if the argument format is invalid or an argument with the same name already exists.
      */
     public override Program argument(string format, string description, string defaultValue = null) @safe {
         super.argument(format, description, defaultValue);

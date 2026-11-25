@@ -42,7 +42,7 @@ public struct ValueType {
      *   name = Name of the type.
      *
      * Throws:
-     *   AssertionError if the name is not a known type and not a list of at least two non-empty choices.
+     *   AssertError if the name is not a known type and not a list of at least two non-empty choices.
      */
     public static ValueType fromString(string name) @safe {
         switch (name) {
