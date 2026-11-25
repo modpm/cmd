@@ -2,7 +2,7 @@
 
 [![Documentation](https://img.shields.io/badge/Documentation-blue)](https://modpm.github.io/cmd)
 [![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github)](https://github.com/modpm/cmd)
-[![CI](https://github.com/modpm/cmd/actions/workflows/build.yaml/badge.svg)](https://github.com/modpm/cmd/actions/workflows/build.yaml)
+[![Tests CI](https://github.com/modpm/cmd/actions/workflows/test.yaml/badge.svg)](https://github.com/modpm/cmd/actions/workflows/test.yaml)
 [![Version](https://img.shields.io/dub/v/cmd)](https://code.dlang.org/packages/cmd)
 [![Licence](https://img.shields.io/dub/l/cmd)](https://github.com/modpm/cmd/blob/main/COPYING)
 [![Score](https://img.shields.io/dub/score/cmd)](https://code.dlang.org/packages/cmd)

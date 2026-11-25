@@ -37,7 +37,7 @@ public class Argument {
      *   valueType = Type of the argument value.
      *
      * Throws:
-     *   AssertionError if name is empty, if argument is required and default value is not `null`, or if the default
+     *   AssertError if name is empty, if argument is required and default value is not `null`, or if the default
      *   value is not valid for the value type.
      */
     public this(string name, bool required, bool variadic, string description, string defaultValue = null,
@@ -67,7 +67,7 @@ public class Argument {
      *   defaultValue = Default value, or `null`.
      *
      * Throws:
-     *   AssertionError if format is not enclosed in `<>` or `[]`, or if the value type is unknown.
+     *   AssertError if format is not enclosed in `<>` or `[]`, or if the value type is unknown.
      */
     public static Argument fromString(string format, string description, string defaultValue = null) @safe {
         assert(

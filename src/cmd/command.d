@@ -36,7 +36,7 @@ public class Command {
      *   name = Name of the command.
      *
      * Throws:
-     *   AssertionError if the name is empty.
+     *   AssertError if the name is empty.
      */
     public this(string name) @safe {
         assert(!name.empty(), "Command name must be non-empty");
@@ -112,7 +112,7 @@ public class Command {
      * Adds a subcommand.
      *
      * Throws:
-     *   AssertionError if subcommand already has a chain, if this command has arguments, or if a subcommand with the
+     *   AssertError if subcommand already has a chain, if this command has arguments, or if a subcommand with the
      *   same name already exists.
      */
     public Command add(Command cmd) @safe {
@@ -128,7 +128,7 @@ public class Command {
      * Adds a subcommand.
      *
      * Throws:
-     *   AssertionError if subcommand already has a chain, if this command has arguments, or if a subcommand with the
+     *   AssertError if subcommand already has a chain, if this command has arguments, or if a subcommand with the
      *   same name already exists.
      */
     public Command command(Command cmd) @safe {
@@ -139,7 +139,7 @@ public class Command {
      * Adds an option.
      *
      * Throws:
-     *   AssertionError if an option with the same short or long name already exists.
+     *   AssertError if an option with the same short or long name already exists.
      */
     public Command add(Option option) @safe {
         assert(findOption(option.shortName) is null, "Option '-" ~ option.shortName ~ "' already exists");
@@ -152,7 +152,7 @@ public class Command {
      * Adds a flag.
      *
      * Throws:
-     *   AssertionError if a flag with the same short or long name already exists.
+     *   AssertError if a flag with the same short or long name already exists.
      */
     public Command add(Flag flag) @safe {
         assert(findFlag(flag.shortName) is null, "Option '-" ~ flag.shortName ~ "' already exists");
@@ -181,7 +181,7 @@ public class Command {
      * Adds an argument.
      *
      * Throws:
-     *   AssertionError if the command has subcommands or an argument with the same name already exists.
+     *   AssertError if the command has subcommands or an argument with the same name already exists.
      */
     public Command add(Argument arg) @safe {
         assert(subcommands.empty(), "Cannot add arguments to a command that has subcommands");
@@ -199,7 +199,7 @@ public class Command {
      *   defaultValue = Default value of the argument, or `null`.
      *
      * Throws:
-     *   AssertionError if the argument format is invalid or an argument with the same name already exists.
+     *   AssertError if the argument format is invalid or an argument with the same name already exists.
      */
     public Command argument(string format, string description, string defaultValue = null) @safe {
         return add(Argument.fromString(format, description, defaultValue));
@@ -222,7 +222,7 @@ public class Command {
      * Params:
      *   colors = Whether to use colors in the usage string.
      * Throws:
-     *   AssertionError if command chain is null or empty, or if first command is not a Program.
+     *   AssertError if command chain is null or empty, or if first command is not a Program.
      */
     public string usage(bool colors = false) const {
         assert(chain !is null, "Command chain is not initialised");
@@ -232,7 +232,7 @@ public class Command {
 
         Appender!string sb;
         sb.put(program.name());
-        if (program.versionOption() || program.helpOption())
+        if ((chain.length > 1 || !subcommands.empty()) && (program.versionOption() || program.helpOption()))
             sb.put(" "
                 ~ "[".brightBlack() ~ ((chain.length > 1 ? "global " : "") ~ "options").dim() ~ "]".brightBlack());
         if (chain.length > 1)

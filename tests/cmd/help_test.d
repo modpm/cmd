@@ -46,11 +46,42 @@ unittest {
 }
 
 unittest {
-    Program program = new TestProgram("app").helpOption("-h, --help", "d");
-    expect(program.usage()).to.startWith("app [options]");
+    Program help = new TestProgram("app").helpOption("-h, --help", "d");
+    expect(help.usage()).to.equal("app [options]");
 
     Program versioned = new TestProgram("app").versionString("1").versionOption("--version", "d");
-    expect(versioned.usage()).to.startWith("app [options]");
+    expect(versioned.usage()).to.equal("app [options]");
+
+    Program both = new TestProgram("app")
+        .versionString("1")
+        .versionOption("--version", "d")
+        .helpOption("-h, --help", "d");
+    expect(both.usage()).to.equal("app [options]");
+}
+
+unittest {
+    Program required = new TestProgram("app").helpOption("-h, --help", "d").option("-t, --target <n>", "d");
+    expect(required.usage()).to.equal("app <options>");
+
+    Program optional = new TestProgram("app").helpOption("-h, --help", "d").option("-p, --port [n]", "d");
+    expect(optional.usage()).to.equal("app [options]");
+
+    Program withArgument = new TestProgram("app").helpOption("-h, --help", "d").argument("<input>", "d");
+    expect(withArgument.usage()).to.equal("app [options] <input>");
+}
+
+unittest {
+    Program program = new TestProgram("app").helpOption("-h, --help", "d");
+    program.command(new TestCommand("sub"));
+    expect(program.usage()).to.equal("app [options] <command> ...");
+}
+
+unittest {
+    Program program = new TestProgram("app").helpOption("-h, --help", "d");
+    auto sub = new TestCommand("sub");
+    program.add(sub);
+    sub.option("-v, --verbose", "d");
+    expect(sub.usage()).to.equal("app [global options] sub [options]");
 }
 
 unittest {
