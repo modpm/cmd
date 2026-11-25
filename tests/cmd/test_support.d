@@ -118,3 +118,25 @@ string captureStderr(scope void delegate() action) {
 string helpOf(const Command command) {
     return captureStdout({ command.printHelp(); });
 }
+
+Program completionProgram() {
+    return new TestProgram("my-app")
+        .versionString("1.0")
+        .versionOption("--version", "Show version")
+        .helpOption("-h, --help", "Show help")
+        .option("-q, --quiet", "Quiet")
+        .command(new TestCommand("serve")
+            .description("Serve files, it's 'quoted'")
+            .option("-p, --port [port:int]", "Port")
+            .option("--format [format:json|yaml]", "Output format")
+            .option("--config [path:file]", "Config file")
+            .option("--root [dir:dir]", "Root")
+            .option("--name [name]", "Name")
+            .option("-v, --verbose", "Verbose")
+            .argument("<root:dir>", "Document root")
+            .argument("[ids:int...]", "Ids"))
+        .command(new TestCommand("remote")
+            .description("Manage remotes")
+            .command(new TestCommand("add").description("Add remote").argument("<name>", "Remote name"))
+            .command(new TestCommand("rm").argument("<name:a|b>", "Remote name")));
+}
