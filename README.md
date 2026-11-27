@@ -348,8 +348,9 @@ The library provides clear error messages for common mistakes during args parsin
 
 ```
 error: unknown command 'unknown-command'
-error: missing value for option 'target'
-error: unknown option 'invalid-option'
+error: missing value for option '--target'
+error: unknown option '--invalid-option'
+error: unknown option '--vrbos', did you mean '--verbose'?
 error: unexpected argument 'extra'
 error: missing required option '-t, --target <name>'
 error: missing required argument 'input'

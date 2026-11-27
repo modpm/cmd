@@ -92,8 +92,8 @@ unittest {
     assertFails(program, "unknown option '--nope'", "--nope=1");
     assertFails(program, "unknown option '-n'", "-n");
     assertFails(program, "unknown option '-5'", "-5");
-    assertFails(program, "unknown option '--verbos'", "--verbos");
-    assertFails(program, "unknown option '--verbose2'", "--verbose2");
+    assertFails(program, "unknown option '--verbos', did you mean '--verbose'?", "--verbos");
+    assertFails(program, "unknown option '--verbose2', did you mean '--verbose'?", "--verbose2");
 }
 
 unittest {
@@ -385,7 +385,7 @@ unittest {
     Program program = new TestProgram("app").command(sub);
     assertFails(program, "unknown command 'nope'", "nope");
     assertFails(program, "unknown command 'nope'", "--flag", "nope");
-    assertFails(program, "unknown command 'sub2'", "sub2", "x");
+    assertFails(program, "unknown command 'sub2', did you mean 'sub'?", "sub2", "x");
     assertFails(program, "missing required argument 'x'", "sub");
     assertFails(program, "unexpected argument 'b'", "sub", "a", "b");
 }
@@ -619,6 +619,28 @@ unittest {
     expect(parseOk(program, "sub", "--", "-x").argument("v")).to.equal("-x");
     expect(parseOk(program, "--").command is program).to.equal(true);
     assertFails(program, "unknown command '-x'", "--", "-x");
+}
+
+unittest {
+    Program program = new TestProgram("app")
+        .helpOption("-h, --help", "d")
+        .option("-c, --colour", "d")
+        .option("--format <format>", "d");
+    assertFails(program, "unknown option '--colur', did you mean '--colour'?", "--colur");
+    assertFails(program, "unknown option '--colur', did you mean '--colour'?", "--colur=1");
+    assertFails(program, "unknown option '--fromat', did you mean '--format'?", "--fromat", "x");
+    assertFails(program, "unknown option '--hlp', did you mean '--help'?", "--hlp");
+    assertFails(program, "unknown option '--zzzzzz'", "--zzzzzz");
+    assertFails(program, "unknown option '-x'", "-x");
+}
+
+unittest {
+    Program program = new TestProgram("app")
+        .command(new TestCommand("serve"))
+        .command(new TestCommand("build"));
+    assertFails(program, "unknown command 'serv', did you mean 'serve'?", "serv");
+    assertFails(program, "unknown command 'biuld', did you mean 'build'?", "biuld");
+    assertFails(program, "unknown command 'deploy'", "deploy");
 }
 
 unittest {

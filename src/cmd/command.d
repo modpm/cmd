@@ -15,6 +15,7 @@ import cmd.flag;
 import cmd.option;
 import cmd.parsed_args;
 import cmd.program;
+import cmd.suggestion;
 import cmd.value_type;
 
 /** Represents a command-line command. */
@@ -86,6 +87,15 @@ public class Command {
             }
         }
         return null;
+    }
+
+    private string[] longNames(const(Program) program) const {
+        const(Flag)[] all = cast(const(Flag)[]) flags ~ cast(const(Flag)[]) options;
+        if (program.helpOption() !is null)
+            all ~= program.helpOption();
+        if (program.versionOption() !is null)
+            all ~= program.versionOption();
+        return all.filter!(f => f.longName !is null).map!(f => "--" ~ f.longName).array();
     }
 
     private const(Option) findOption(string query) const nothrow @safe {
@@ -376,7 +386,7 @@ public class Command {
             if (index >= 0) {
                 const(Command) cmd = findCommand(args[index]);
                 if (cmd is null)
-                    error("unknown command '" ~ args[index] ~ "'", 2);
+                    error("unknown command '" ~ args[index] ~ "'" ~ didYouMean(args[index], subcommands.map!(c => c.name()).array()), 2);
                 return cmd.parse(args[0..index] ~ args[index + 1..$], program);
             }
         }
@@ -453,7 +463,11 @@ public class Command {
                         parsedOptions[option] = [value];
                     continue;
                 }
-                else program.error("unknown option '" ~ optName ~ "'", 2);
+                else program.error(
+                    "unknown option '" ~ optName ~ "'"
+                    ~ (optName.startsWith("--") ? didYouMean(optName, longNames(program)) : ""),
+                    2
+                );
             }
 
             if (argIndex + 1 > arguments.length) {
