@@ -21,9 +21,7 @@ categories:
       label: 'documentation'
   - title: 'Dependencies'
     when:
-      labels:
-        - 'dependencies'
-        - 'github_actions'
+      label: 'dependencies'
   - title: 'Other Changes'
 
   - type: 'version-resolver'
