@@ -3,6 +3,7 @@ module cmd.command;
 import core.stdc.stdlib;
 import std.algorithm;
 import std.array;
+import std.process : environment;
 import std.range : repeat;
 import std.stdio;
 import std.string;
@@ -485,6 +486,14 @@ public class Command {
 
         foreach (opt; options) {
             if (parsedArgs.hasOption(opt)) continue;
+            if (opt.environmentVariable() !is null) {
+                const value = environment.get(opt.environmentVariable(), "");
+                if (!value.empty()) {
+                    validate("environment variable '" ~ opt.environmentVariable() ~ "'", value, opt.valueType);
+                    parsedArgs.setOption(opt, [value]);
+                    continue;
+                }
+            }
             if (opt.required)
                 error("missing required option '" ~ opt.formattedName() ~ "'", 2);
             if (opt.defaultValue !is null)

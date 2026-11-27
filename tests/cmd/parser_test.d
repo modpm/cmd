@@ -2,8 +2,11 @@ module cmd.parser_test;
 
 import std.exception : collectException;
 
+import std.process : environment;
+
 import fluent.asserts;
 
+import cmd.option;
 import cmd.program;
 import cmd.test_support;
 
@@ -616,4 +619,41 @@ unittest {
     expect(parseOk(program, "sub", "--", "-x").argument("v")).to.equal("-x");
     expect(parseOk(program, "--").command is program).to.equal(true);
     assertFails(program, "unknown command '-x'", "--", "-x");
+}
+
+unittest {
+    auto program = new TestProgram("app");
+    program.add(Option.fromString("-p, --port [port:int]", "d", "80").env("CMD_TEST_PORT"));
+    scope (exit)
+        environment.remove("CMD_TEST_PORT");
+
+    environment.remove("CMD_TEST_PORT");
+    expect(parseOk(program).option("port")).to.equal("80");
+
+    environment["CMD_TEST_PORT"] = "8080";
+    expect(parseOk(program).option("port")).to.equal("8080");
+    expect(parseOk(program, "--port", "9090").option("port")).to.equal("9090");
+
+    environment["CMD_TEST_PORT"] = "";
+    expect(parseOk(program).option("port")).to.equal("80");
+
+    environment["CMD_TEST_PORT"] = "abc";
+    assertFails(
+        program,
+        "invalid value 'abc' for environment variable 'CMD_TEST_PORT': expected an integer"
+    );
+    expect(parseOk(program, "--port", "9090").option("port")).to.equal("9090");
+}
+
+unittest {
+    auto program = new TestProgram("app");
+    program.add(Option.fromString("-t, --token <token>", "d").env("CMD_TEST_TOKEN"));
+    scope (exit)
+        environment.remove("CMD_TEST_TOKEN");
+
+    environment.remove("CMD_TEST_TOKEN");
+    assertFails(program, "missing required option '-t, --token <token>'");
+
+    environment["CMD_TEST_TOKEN"] = "secret";
+    expect(parseOk(program).option("token")).to.equal("secret");
 }
