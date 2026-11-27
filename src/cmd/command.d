@@ -178,6 +178,33 @@ public class Command {
     }
 
     /**
+     * Adds an option from formatted string with a function that provides the suggestions for its value.
+     *
+     * Params:
+     *   format = Formatted string defining the option.
+     *   description = Description of the option.
+     *   completer = Function receiving the typed prefix of the value and returning the suggestions.
+     */
+    public Command option(string format, string description, string[] delegate(string prefix) completer) @safe {
+        return option(format, description, null, completer);
+    }
+
+    /**
+     * Adds an option from formatted string with a default value and a function that provides the suggestions for its
+     * value.
+     *
+     * Params:
+     *   format = Formatted string defining the option.
+     *   description = Description of the option.
+     *   defaultValue = Default value of the parameter, or `null`.
+     *   completer = Function receiving the typed prefix of the value and returning the suggestions.
+     */
+    public Command option(string format, string description, string defaultValue,
+        string[] delegate(string prefix) completer) @safe {
+        return add(Option.fromString(format, description, defaultValue).completer(completer));
+    }
+
+    /**
      * Adds an argument.
      *
      * Throws:
@@ -203,6 +230,39 @@ public class Command {
      */
     public Command argument(string format, string description, string defaultValue = null) @safe {
         return add(Argument.fromString(format, description, defaultValue));
+    }
+
+    /**
+     * Adds an argument from formatted string with a function that provides the suggestions for its value.
+     *
+     * Params:
+     *   format = Formatted string defining the argument.
+     *   description = Description of the argument.
+     *   completer = Function receiving the typed prefix of the value and returning the suggestions.
+     *
+     * Throws:
+     *   AssertError if the argument format is invalid or an argument with the same name already exists.
+     */
+    public Command argument(string format, string description, string[] delegate(string prefix) completer) @safe {
+        return argument(format, description, null, completer);
+    }
+
+    /**
+     * Adds an argument from formatted string with a default value and a function that provides the suggestions for its
+     * value.
+     *
+     * Params:
+     *   format = Formatted string defining the argument.
+     *   description = Description of the argument.
+     *   defaultValue = Default value of the argument, or `null`.
+     *   completer = Function receiving the typed prefix of the value and returning the suggestions.
+     *
+     * Throws:
+     *   AssertError if the argument format is invalid or an argument with the same name already exists.
+     */
+    public Command argument(string format, string description, string defaultValue,
+        string[] delegate(string prefix) completer) @safe {
+        return add(Argument.fromString(format, description, defaultValue).completer(completer));
     }
 
     /**

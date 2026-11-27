@@ -4,6 +4,8 @@ import std.algorithm : count;
 
 import fluent.asserts;
 
+import cmd.argument;
+import cmd.option;
 import cmd.program;
 import cmd.test_support;
 import cmd.zsh_completion;
@@ -88,4 +90,26 @@ unittest {
 unittest {
     auto program = new TestProgram("app").command(new TestCommand("go").argument("<kind:a b|c>", "Kind"));
     expect(ZshCompletion.generate(program)).to.contain(`':Kind:(a\ b c)'`);
+}
+
+unittest {
+    auto program = new TestProgram("app").command(new TestCommand("install")
+        .add(Option.fromString("-r, --registry <name>", "Registry").completer((prefix) => ["npm"]))
+        .add(Option.fromString("-f, --format <format:a|b>", "Format").completer((prefix) => ["c"]))
+        .add(Argument.fromString("<package>", "Package").completer((prefix) => ["alpha"])));
+    auto script = ZshCompletion.generate(program);
+    expect(script).to.contain("_app_suggest() {\n");
+    expect(script).to.contain("compadd -a values\n");
+    expect(script).to.contain("'app' completion suggest -- \"$1\" \"$PREFIX\"");
+    expect(script).to.contain("_app_suggest_1() {\n    _app_suggest 'install:--registry'\n}\n");
+    expect(script).to.contain("_app_suggest_2() {\n    _app_suggest 'install:--format'\n}\n");
+    expect(script).to.contain("_app_suggest_3() {\n    _app_suggest 'install:0'\n}\n");
+    expect(script).to.contain(`'*'{-r=,--registry=}'[Registry]:name:_app_suggest_1'`);
+    expect(script).to.contain(`'*'{-f=,--format=}'[Format]:format:_app_suggest_2'`);
+    expect(script).to.contain(`':Package:_app_suggest_3'`);
+    expect(script).to.not.contain("(a b)");
+}
+
+unittest {
+    expect(ZshCompletion.generate(completionProgram())).to.not.contain("_suggest");
 }

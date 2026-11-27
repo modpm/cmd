@@ -20,6 +20,8 @@ public final class Option : Flag {
     /** Default value of the parameter, or `null`. */
     public const string defaultValue;
 
+    private string[] delegate(string) completerDg;
+
     /**
      * Constructs an option.
      *
@@ -100,6 +102,26 @@ public final class Option : Flag {
             defaultValue,
             separator < 0 ? ValueType.init : ValueType.fromString(param[separator + 1..$].strip())
         );
+    }
+
+    /**
+     * Sets the function that provides the suggestions for the parameter value in shell completion.
+     *
+     * Params:
+     *   source = Function receiving the typed prefix of the value and returning the suggestions. The shell filters
+     *            them by the prefix, so returning more than the matching ones is fine.
+     */
+    public Option completer(string[] delegate(string prefix) source) nothrow @safe {
+        this.completerDg = source;
+        return this;
+    }
+
+    package bool hasCompleter() const nothrow @safe {
+        return completerDg !is null;
+    }
+
+    package string[] complete(string prefix) const {
+        return completerDg(prefix);
     }
 
     /**

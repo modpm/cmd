@@ -44,7 +44,16 @@ package final class ZshCompletion {
                 : quote(prefix ~ spellings[0] ~ rest);
         }
 
-        string action(const(ValueType) type) {
+        const root = "_" ~ program.name().replaceAll(regex("[^A-Za-z0-9_]"), "_");
+        auto suggesters = appender!string;
+        size_t suggesterCount = 0;
+
+        string action(const(ValueType) type, bool dynamic, string parameter) {
+            if (dynamic) {
+                const name = root ~ "_suggest_" ~ (++suggesterCount).to!string;
+                suggesters.put(name ~ "() {\n    " ~ root ~ "_suggest " ~ quote(parameter) ~ "\n}\n\n");
+                return name;
+            }
             final switch (type.kind) {
                 case ValueType.Kind.file:
                     return "_files";
@@ -58,11 +67,10 @@ package final class ZshCompletion {
             }
         }
 
-        const root = "_" ~ program.name().replaceAll(regex("[^A-Za-z0-9_]"), "_");
         size_t counter = 0;
         auto functions = appender!string;
 
-        string visit(const(Command) cmd, bool isRoot) {
+        string visit(const(Command) cmd, bool isRoot, string path) {
             const name = isRoot ? root : root ~ "_" ~ (++counter).to!string;
 
             const(Flag)[] flags;
@@ -90,13 +98,14 @@ package final class ZshCompletion {
                 specs ~= spec(
                     "*",
                     names(opt).map!(n => n ~ "=").array,
-                    "[" ~ escape(opt.description) ~ "]:" ~ escape(opt.paramName) ~ ":" ~ action(opt.valueType)
+                    "[" ~ escape(opt.description) ~ "]:" ~ escape(opt.paramName) ~ ":"
+                        ~ action(opt.valueType, opt.hasCompleter(), path ~ ":" ~ names(opt)[$ - 1])
                 );
 
             string[] dispatch;
             string[] listing;
             foreach (sub; cmd.subcommands) {
-                const subName = visit(sub, false);
+                const subName = visit(sub, false, path.empty() ? sub.name() : path ~ " " ~ sub.name());
                 const entry = sub.name().replace("\\", "\\\\").replace(":", "\\:");
                 listing ~= quote(sub.description().empty() ? entry : entry ~ ":" ~ sub.description());
                 dispatch ~= sub.name() ~ ") " ~ subName ~ " ;;";
@@ -131,7 +140,7 @@ package final class ZshCompletion {
 
             foreach (i, arg; cmd.arguments) {
                 const message = escape(arg.description.empty() ? arg.name : arg.description);
-                const rest = message ~ ":" ~ action(arg.valueType);
+                const rest = message ~ ":" ~ action(arg.valueType, arg.hasCompleter(), path ~ ":" ~ i.to!string);
                 specs ~= quote(arg.variadic ? "*:" ~ rest : arg.required ? ":" ~ rest : "::" ~ rest);
             }
             functions.put(
@@ -144,9 +153,17 @@ package final class ZshCompletion {
             return name;
         }
 
-        visit(program, true);
+        visit(program, true, "");
 
         return "#compdef " ~ program.name() ~ "\n\n"
+            ~ (suggesterCount > 0
+                ? root ~ "_suggest() {\n"
+                    ~ "    local -a values\n"
+                    ~ "    values=(${(f)\"$(" ~ quote(program.name()) ~ " completion suggest -- \"$1\" \"$PREFIX\" 2>/dev/null)\"})\n"
+                    ~ "    compadd -a values\n"
+                    ~ "}\n\n"
+                    ~ suggesters.data
+                : "")
             ~ functions.data
             ~ "if [[ ${funcstack[1]} == " ~ root ~ " ]]; then\n"
             ~ "    " ~ root ~ " \"$@\"\n"

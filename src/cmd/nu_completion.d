@@ -2,6 +2,7 @@ module cmd.nu_completion;
 
 import std.algorithm;
 import std.array;
+import std.conv;
 import std.regex;
 import std.string;
 
@@ -34,7 +35,28 @@ package final class NuCompletion {
         auto completers = appender!string;
         auto externs = appender!string;
 
-        string type(string owner, string param, const(ValueType) valueType) {
+        string type(string owner, string param, const(ValueType) valueType, bool dynamic, string parameter) {
+            if (dynamic) {
+                const name = "nu-complete " ~ owner ~ " " ~ param;
+                completers.put(
+                    "    def " ~ quote(name) ~ " [context: string] {\n"
+                    ~ "        let prefix = ($context | split row \" \" | last)\n"
+                    ~ "        try { run-external " ~ quote(program.name()) ~ " \"completion\" \"suggest\" \"--\" " ~ quote(parameter)
+                    ~ " $prefix | lines } catch { [] }\n"
+                    ~ "    }\n\n"
+                );
+                final switch (valueType.kind) {
+                    case ValueType.Kind.file:
+                        return "path@" ~ quote(name);
+                    case ValueType.Kind.dir:
+                        return "directory@" ~ quote(name);
+                    case ValueType.Kind.integer:
+                        return "int@" ~ quote(name);
+                    case ValueType.Kind.choice:
+                    case ValueType.Kind.text:
+                        return "string@" ~ quote(name);
+                }
+            }
             final switch (valueType.kind) {
                 case ValueType.Kind.file:
                     return "path";
@@ -74,6 +96,8 @@ package final class NuCompletion {
                     ~ (flag.description.empty() ? "" : " # " ~ line(flag.description));
             }
 
+            const relative = path[program.name().length..$].strip();
+
             if (program.helpOption() !is null)
                 add(program.helpOption(), null);
             if (program.versionOption() !is null)
@@ -81,11 +105,17 @@ package final class NuCompletion {
             foreach (flag; cmd.flags)
                 add(flag, null);
             foreach (opt; cmd.options)
-                add(opt, type(path, opt.longName !is null ? opt.longName : opt.shortName, opt.valueType));
+                add(opt, type(
+                    path,
+                    opt.longName !is null ? opt.longName : opt.shortName,
+                    opt.valueType,
+                    opt.hasCompleter(),
+                    relative ~ ":" ~ (opt.longName !is null ? "--" ~ opt.longName : "-" ~ opt.shortName)
+                ));
 
-            foreach (arg; cmd.arguments) {
+            foreach (i, arg; cmd.arguments) {
                 const name = label(arg.name);
-                const valueType = type(path, name, arg.valueType);
+                const valueType = type(path, name, arg.valueType, arg.hasCompleter(), relative ~ ":" ~ i.to!string);
                 params ~= "        "
                     ~ (arg.variadic ? "..." ~ name ~ ": " : arg.required ? name ~ ": " : name ~ "?: ")
                     ~ valueType

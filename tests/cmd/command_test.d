@@ -279,3 +279,32 @@ unittest {
     expect(failure.status).to.equal(2);
     expect(failure.msg).to.equal("missing required argument 'value'");
 }
+
+unittest {
+    auto command = new TestCommand("deploy")
+        .option("-r, --registry <name>", "Registry", (prefix) => ["npm"])
+        .option("-t, --tag [tag]", "Tag", "latest", (prefix) => ["latest", "next"])
+        .argument("<package>", "Package", (prefix) => ["alpha"])
+        .argument("[version]", "Version", "1.0", (prefix) => ["1.0", "2.0"]);
+    expect(command.options.length).to.equal(2);
+    expect(command.options[0].complete("")).to.equal(["npm"]);
+    expect(command.options[1].defaultValue).to.equal("latest");
+    expect(command.options[1].complete("")).to.equal(["latest", "next"]);
+    expect(command.arguments.length).to.equal(2);
+    expect(command.arguments[0].complete("")).to.equal(["alpha"]);
+    expect(command.arguments[1].defaultValue).to.equal("1.0");
+    expect(command.arguments[1].complete("")).to.equal(["1.0", "2.0"]);
+}
+
+unittest {
+    Program program = new TestProgram("app")
+        .option("-r, --registry <name>", "Registry", (prefix) => ["npm"])
+        .option("-t, --tag [tag]", "Tag", "latest", (prefix) => ["next"])
+        .argument("<package>", "Package", (prefix) => ["alpha"])
+        .argument("[version]", "Version", "1.0", (prefix) => ["2.0"]);
+    expect(program.options.length).to.equal(2);
+    expect(program.options[0].complete("")).to.equal(["npm"]);
+    expect(program.options[1].defaultValue).to.equal("latest");
+    expect(program.arguments[0].complete("")).to.equal(["alpha"]);
+    expect(program.arguments[1].defaultValue).to.equal("1.0");
+}

@@ -214,3 +214,24 @@ unittest {
     expect(Option.fromString("-f, --format [format:json|yaml]", "d").formattedName(true, false).stripAnsi())
         .to.equal("-f, --format [json|yaml]");
 }
+
+unittest {
+    auto option = Option.fromString("-f, --file <path>", "File");
+    expect(option.hasCompleter()).to.equal(false);
+    expect(option.completer((prefix) => ["a", "b"])).to.equal(option);
+    expect(option.hasCompleter()).to.equal(true);
+    expect(option.complete("")).to.equal(["a", "b"]);
+}
+
+unittest {
+    auto option = Option.fromString("-k, --kind <kind:x|y>", "Kind").completer((prefix) => ["z"]);
+    expect(option.valueType.accepts("x")).to.equal(true);
+    expect(option.valueType.accepts("z")).to.equal(false);
+    expect(option.complete("")).to.equal(["z"]);
+}
+
+unittest {
+    auto option = Option.fromString("-f, --file <path>", "File").completer((prefix) => [prefix ~ "!"]);
+    expect(option.complete("ab")).to.equal(["ab!"]);
+    expect(option.complete("")).to.equal(["!"]);
+}

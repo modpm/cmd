@@ -5,6 +5,8 @@ import std.algorithm : count;
 import fluent.asserts;
 
 import cmd.bash_completion;
+import cmd.argument;
+import cmd.option;
 import cmd.program;
 import cmd.test_support;
 
@@ -79,4 +81,21 @@ unittest {
     auto program = new TestProgram("app").argument("<files:file...>", "Files");
     auto script = BashCompletion.generate(program);
     expect(script).to.contain("'')\n            case \"$2\" in\n                *) kind=file ;;\n");
+}
+
+unittest {
+    auto program = new TestProgram("app").command(new TestCommand("install")
+        .add(Option.fromString("-r, --registry <name>", "Registry").completer((prefix) => ["npm"]))
+        .add(Option.fromString("-f, --format <format:a|b>", "Format").completer((prefix) => ["c"]))
+        .add(Argument.fromString("<package>", "Package").completer((prefix) => ["alpha"])));
+    auto script = BashCompletion.generate(program);
+    expect(script).to.contain("'install:-r'|'install:--registry') kind=dynamic; parameter='install:--registry' ;;");
+    expect(script).to.contain("'install:-f'|'install:--format') kind=dynamic; parameter='install:--format' ;;");
+    expect(script).to.not.contain("values=");
+    expect(script).to.contain("'install')\n            case \"$2\" in\n                0) kind=dynamic; parameter='install:0' ;;\n");
+    expect(script).to.contain("<('app' completion suggest -- \"$parameter\" \"$prefix\" 2>/dev/null)");
+}
+
+unittest {
+    expect(BashCompletion.generate(completionProgram())).to.not.contain("kind=dynamic");
 }

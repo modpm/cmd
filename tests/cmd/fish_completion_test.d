@@ -5,6 +5,8 @@ import std.algorithm : count;
 import fluent.asserts;
 
 import cmd.fish_completion;
+import cmd.argument;
+import cmd.option;
 import cmd.program;
 import cmd.test_support;
 
@@ -95,4 +97,21 @@ unittest {
 unittest {
     auto program = new TestProgram("app").command(new TestCommand("go").description("back\\slash"));
     expect(FishCompletion.generate(program)).to.contain(`s 'go' 'back\\slash'`);
+}
+
+unittest {
+    auto program = new TestProgram("app").command(new TestCommand("install")
+        .add(Option.fromString("-r, --registry <name>", "Registry").completer((prefix) => ["npm"]))
+        .add(Option.fromString("-f, --format <format:a|b>", "Format").completer((prefix) => ["c"]))
+        .add(Argument.fromString("<package>", "Package").completer((prefix) => ["alpha"])));
+    auto script = FishCompletion.generate(program);
+    expect(script).to.contain("case 'install:-r' 'install:--registry'\n            printf '%s\\n' dynamic 'install:--registry'\n");
+    expect(script).to.contain("case 'install:-f' 'install:--format'\n            printf '%s\\n' dynamic 'install:--format'\n");
+    expect(script).to.contain("case 0\n                    printf '%s\\n' dynamic 'install:0'\n");
+    expect(script).to.contain("case dynamic\n            for v in ('app' completion suggest -- $spec[2] \"$prefix\" 2>/dev/null)\n");
+    expect(script).to.not.contain("words 'a' 'b'");
+}
+
+unittest {
+    expect(FishCompletion.generate(completionProgram())).to.not.contain("dynamic '");
 }

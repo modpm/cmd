@@ -4,6 +4,8 @@ import std.algorithm : count;
 
 import fluent.asserts;
 
+import cmd.argument;
+import cmd.option;
 import cmd.program;
 import cmd.pwsh_completion;
 import cmd.test_support;
@@ -88,4 +90,22 @@ unittest {
     expect(script).to.contain("'-x' = 'Short only'");
     expect(script).to.contain("'--yy' = 'Long only'");
     expect(script).to.not.contain("'--help'");
+}
+
+unittest {
+    auto program = new TestProgram("app").command(new TestCommand("install")
+        .add(Option.fromString("-r, --registry <name>", "Registry").completer((prefix) => ["npm"]))
+        .add(Option.fromString("-f, --format <format:a|b>", "Format").completer((prefix) => ["c"]))
+        .add(Argument.fromString("<package>", "Package").completer((prefix) => ["alpha"])));
+    auto script = PwshCompletion.generate(program);
+    expect(script).to.contain("'install:-r' = @('dynamic', 'install:--registry')");
+    expect(script).to.contain("'install:--registry' = @('dynamic', 'install:--registry')");
+    expect(script).to.contain("'install:--format' = @('dynamic', 'install:--format')");
+    expect(script).to.contain("'install:0' = @('dynamic', 'install:0')");
+    expect(script).to.contain("@(& 'app' completion suggest -- $spec[1] $prefix 2>$null)");
+    expect(script).to.not.contain("'words', 'a', 'b'");
+}
+
+unittest {
+    expect(PwshCompletion.generate(completionProgram())).to.not.contain("@('dynamic'");
 }
