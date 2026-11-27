@@ -1,5 +1,7 @@
 module cmd.ansi_test;
 
+import std.process : environment;
+
 import fluent.asserts;
 
 import cmd.ansi;
@@ -53,4 +55,20 @@ unittest {
     auto text = "Usage: " ~ bold("app") ~ " " ~ link("docs", "https://example.com") ~ dim("!");
     expect(stripAnsi(text)).to.equal("Usage: app docs!");
     expect(stripAnsi(stripAnsi(text))).to.equal(stripAnsi(text));
+}
+
+unittest {
+    environment["NO_COLOR"] = "1";
+    scope (exit)
+        environment.remove("NO_COLOR");
+    expect(brightBlack("x")).to.equal("\x1B[2mx\x1B[0m");
+    expect(bold("x")).to.equal("\x1B[1mx\x1B[0m");
+    expect(dim("x")).to.equal("\x1B[2mx\x1B[0m");
+}
+
+unittest {
+    environment["NO_COLOR"] = "";
+    scope (exit)
+        environment.remove("NO_COLOR");
+    expect(brightBlack("x")).to.equal("\x1B[90mx\x1B[0m");
 }

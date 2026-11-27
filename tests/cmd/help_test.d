@@ -2,6 +2,7 @@ module cmd.help_test;
 
 import std.array : join;
 import std.exception : collectException;
+import std.process : environment;
 
 import fluent.asserts;
 
@@ -381,4 +382,16 @@ unittest {
 unittest {
     Program program = new TestProgram("app").argument("<format:json|yaml>", "d");
     expect(program.usage()).to.equal("app <json|yaml>");
+}
+
+unittest {
+    Program program = new TestProgram("app")
+        .argument("<input>", "Input")
+        .option("-f, --format <format:a|b>", "Format");
+    environment["NO_COLOR"] = "1";
+    scope (exit)
+        environment.remove("NO_COLOR");
+    const output = helpOf(program);
+    expect(output).to.not.contain("\x1B[90m");
+    expect(output).to.contain("\x1B[1mUsage:\x1B[0m");
 }
