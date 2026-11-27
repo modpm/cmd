@@ -1,0 +1,46 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+tag-prefix: 'v'
+
+change-template: '* $TITLE by $AUTHORS in $URL'
+change-title-escapes: '\<*_&@'
+
+categories:
+  - title: 'Breaking Changes'
+    exclusive: true
+    when:
+      label: 'semver:major'
+  - title: 'Features'
+    when:
+      label: 'feature'
+  - title: 'Bug Fixes'
+    when:
+      label: 'fix'
+  - title: 'Documentation'
+    when:
+      label: 'documentation'
+  - title: 'Dependencies'
+    when:
+      labels:
+        - 'dependencies'
+        - 'github_actions'
+  - title: 'Other Changes'
+
+  # While the major version is 0, breaking changes bump the minor version and everything else bumps the patch version.
+  - type: 'version-resolver'
+    semver-increment: 'minor'
+    when:
+      label: 'semver:major'
+  - type: 'version-resolver'
+    semver-increment: 'patch'
+    when:
+      labels:
+        - 'semver:minor'
+        - 'semver:patch'
+  - type: 'version-resolver'
+    semver-increment: 'patch'
+
+template: |
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
