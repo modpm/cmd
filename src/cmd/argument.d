@@ -25,6 +25,8 @@ public class Argument {
     /** Type of the argument value. */
     public const ValueType valueType;
 
+    private string[] delegate(string) completerDg;
+
     /**
      * Constructs an argument.
      *
@@ -90,6 +92,26 @@ public class Argument {
             defaultValue,
             separator < 0 ? ValueType.init : ValueType.fromString(spec[separator + 1..$].strip())
         );
+    }
+
+    /**
+     * Sets the function that provides the suggestions for the argument value in shell completion.
+     *
+     * Params:
+     *   source = Function receiving the typed prefix of the value and returning the suggestions. The shell filters
+     *            them by the prefix, so returning more than the matching ones is fine.
+     */
+    public Argument completer(string[] delegate(string prefix) source) nothrow @safe {
+        this.completerDg = source;
+        return this;
+    }
+
+    package bool hasCompleter() const nothrow @safe {
+        return completerDg !is null;
+    }
+
+    package string[] complete(string prefix) const {
+        return completerDg(prefix);
     }
 
     /**

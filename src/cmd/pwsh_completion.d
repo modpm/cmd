@@ -35,7 +35,9 @@ package final class PwshCompletion {
             return result;
         }
 
-        string[] value(const(ValueType) type) {
+        string[] value(const(ValueType) type, bool dynamic, string parameter) {
+            if (dynamic)
+                return ["dynamic", parameter];
             final switch (type.kind) {
                 case ValueType.Kind.file:
                     return ["file"];
@@ -96,14 +98,14 @@ package final class PwshCompletion {
             );
 
             foreach (opt; cmd.options) {
-                const spec = value(opt.valueType);
+                const spec = value(opt.valueType, opt.hasCompleter(), path ~ ":" ~ names(opt)[$ - 1]);
                 if (spec !is null)
                     foreach (name; names(opt))
                         values.put("    " ~ quote(path ~ ":" ~ name) ~ " = @(" ~ spec.map!(s => quote(s)).join(", ") ~ ")\n");
             }
 
             foreach (i, arg; cmd.arguments) {
-                const spec = value(arg.valueType);
+                const spec = value(arg.valueType, arg.hasCompleter(), path ~ ":" ~ i.to!string);
                 const index = arg.variadic && i + 1 == cmd.arguments.length ? "*" : i.to!string;
                 if (spec !is null)
                     values.put("    " ~ quote(path ~ ":" ~ index) ~ " = @(" ~ spec.map!(s => quote(s)).join(", ") ~ ")\n");
@@ -230,6 +232,13 @@ Register-ArgumentCompleter -Native -CommandName @NAME@ -ScriptBlock {
         }
         'words' {
             foreach ($v in $spec[1..($spec.Count - 1)]) {
+                if ($v.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    $found += $Result::new($pre + $v, $v, 'ParameterValue', $v)
+                }
+            }
+        }
+        'dynamic' {
+            foreach ($v in @(& @NAME@ completion suggest -- $spec[1] $prefix 2>$null)) {
                 if ($v.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
                     $found += $Result::new($pre + $v, $v, 'ParameterValue', $v)
                 }

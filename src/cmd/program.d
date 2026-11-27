@@ -150,6 +150,35 @@ public class Program : Command {
     }
 
     /**
+     * Adds an option from formatted string with a function that provides the suggestions for its value.
+     *
+     * Params:
+     *   format = Formatted string defining the option.
+     *   description = Description of the option.
+     *   completer = Function receiving the typed prefix of the value and returning the suggestions.
+     */
+    public override Program option(string format, string description, string[] delegate(string prefix) completer) @safe {
+        super.option(format, description, completer);
+        return this;
+    }
+
+    /**
+     * Adds an option from formatted string with a default value and a function that provides the suggestions for its
+     * value.
+     *
+     * Params:
+     *   format = Formatted string defining the option.
+     *   description = Description of the option.
+     *   defaultValue = Default value of the parameter, or `null`.
+     *   completer = Function receiving the typed prefix of the value and returning the suggestions.
+     */
+    public override Program option(string format, string description, string defaultValue,
+        string[] delegate(string prefix) completer) @safe {
+        super.option(format, description, defaultValue, completer);
+        return this;
+    }
+
+    /**
      * Adds an argument.
      *
      * Throws:
@@ -173,6 +202,41 @@ public class Program : Command {
      */
     public override Program argument(string format, string description, string defaultValue = null) @safe {
         super.argument(format, description, defaultValue);
+        return this;
+    }
+
+    /**
+     * Adds an argument from formatted string with a function that provides the suggestions for its value.
+     *
+     * Params:
+     *   format = Formatted string defining the argument.
+     *   description = Description of the argument.
+     *   completer = Function receiving the typed prefix of the value and returning the suggestions.
+     *
+     * Throws:
+     *   AssertError if the argument format is invalid or an argument with the same name already exists.
+     */
+    public override Program argument(string format, string description, string[] delegate(string prefix) completer) @safe {
+        super.argument(format, description, completer);
+        return this;
+    }
+
+    /**
+     * Adds an argument from formatted string with a default value and a function that provides the suggestions for its
+     * value.
+     *
+     * Params:
+     *   format = Formatted string defining the argument.
+     *   description = Description of the argument.
+     *   defaultValue = Default value of the argument, or `null`.
+     *   completer = Function receiving the typed prefix of the value and returning the suggestions.
+     *
+     * Throws:
+     *   AssertError if the argument format is invalid or an argument with the same name already exists.
+     */
+    public override Program argument(string format, string description, string defaultValue,
+        string[] delegate(string prefix) completer) @safe {
+        super.argument(format, description, defaultValue, completer);
         return this;
     }
 

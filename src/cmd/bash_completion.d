@@ -3,6 +3,7 @@ module cmd.bash_completion;
 import std.algorithm;
 import std.array;
 import std.conv;
+import std.range : iota;
 import std.regex;
 import std.string;
 
@@ -33,7 +34,9 @@ package final class BashCompletion {
             return result;
         }
 
-        string assignment(const(ValueType) type) {
+        string assignment(const(ValueType) type, bool dynamic, string parameter) {
+            if (dynamic)
+                return "kind=dynamic; parameter=" ~ quote(parameter);
             final switch (type.kind) {
                 case ValueType.Kind.file:
                     return "kind=file";
@@ -78,18 +81,21 @@ package final class BashCompletion {
             );
 
             foreach (opt; cmd.options) {
-                const assign = assignment(opt.valueType);
+                const assign = assignment(opt.valueType, opt.hasCompleter(), path ~ ":" ~ names(opt)[$ - 1]);
                 if (assign !is null)
                     option.put(
                         "        " ~ names(opt).map!(n => quote(path ~ ":" ~ n)).join("|") ~ ") " ~ assign ~ " ;;\n"
                     );
             }
 
-            if (cmd.arguments.any!(a => assignment(a.valueType) !is null)) {
+            string argumentAssignment(size_t i) {
+                return assignment(cmd.arguments[i].valueType, cmd.arguments[i].hasCompleter(), path ~ ":" ~ i.to!string);
+            }
+            if (cmd.arguments.length.iota.any!(i => argumentAssignment(i) !is null)) {
                 argument.put("        " ~ quote(path) ~ ")\n            case \"$2\" in\n");
                 foreach (i, arg; cmd.arguments) {
                     const pattern = arg.variadic && i + 1 == cmd.arguments.length ? "*" : i.to!string;
-                    const assign = assignment(arg.valueType);
+                    const assign = argumentAssignment(i);
                     argument.put("                " ~ pattern ~ ") " ~ (assign is null ? "" : assign ~ " ") ~ ";;\n");
                 }
                 argument.put("            esac\n            ;;\n");
@@ -123,7 +129,7 @@ package final class BashCompletion {
 
 @FN@() {
     local cur cword cmd="" end=0 pending="" opt="" npos=0 eq=0 split=0 i last w prefix pre=""
-    local subs flags opts kind values
+    local subs flags opts kind values parameter
     local -a words=()
 
     COMPREPLY=()
@@ -214,6 +220,11 @@ package final class BashCompletion {
         words)
             COMPREPLY=($(compgen -W "$values" -- "$prefix"))
             ;;
+        dynamic)
+            while IFS= read -r w; do
+                [[ $w == "$prefix"* ]] && COMPREPLY+=("$w")
+            done < <(@CALL@ completion suggest -- "$parameter" "$prefix" 2>/dev/null)
+            ;;
     esac
 
     if [[ -n $pre ]]; then
@@ -225,6 +236,7 @@ complete -F @FN@ @NAME@
 `
             .replace("@FN@", "_" ~ program.name().replaceAll(regex("[^A-Za-z0-9_]"), "_"))
             .replace("@NAME@", quote(program.name()))
+            .replace("@CALL@", quote(program.name()))
             .replace("@PROGRAM@", program.name())
             .replace("@VERSION@", versionNames)
             .replace("@LOAD@", load.data.stripRight())

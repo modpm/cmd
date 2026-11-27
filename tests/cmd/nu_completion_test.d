@@ -5,6 +5,8 @@ import std.algorithm : count;
 import fluent.asserts;
 
 import cmd.nu_completion;
+import cmd.argument;
+import cmd.option;
 import cmd.program;
 import cmd.test_support;
 
@@ -88,4 +90,26 @@ unittest {
     expect(script).to.contain("        --yy # Long only\n");
     expect(script).to.not.contain("--help");
     expect(script).to.not.contain("--version");
+}
+
+unittest {
+    auto program = new TestProgram("app").command(new TestCommand("install")
+        .add(Option.fromString("-r, --registry <name>", "Registry").completer((prefix) => ["npm"]))
+        .add(Option.fromString("-f, --format <format:a|b>", "Format").completer((prefix) => ["c"]))
+        .add(Argument.fromString("<package>", "Package").completer((prefix) => ["alpha"])));
+    auto script = NuCompletion.generate(program);
+    expect(script).to.contain(
+        "    def \"nu-complete app install registry\" [context: string] {\n"
+        ~ "        let prefix = ($context | split row \" \" | last)\n"
+        ~ "        try { run-external \"app\" \"completion\" \"suggest\" \"--\" \"install:--registry\" $prefix | lines } catch { [] }\n"
+        ~ "    }\n");
+    expect(script).to.contain("        --registry(-r): string@\"nu-complete app install registry\" # Registry\n");
+    expect(script).to.contain("        --format(-f): string@\"nu-complete app install format\" # Format\n");
+    expect(script).to.contain("        package: string@\"nu-complete app install package\" # Package\n");
+    expect(script).to.contain("\"completion\" \"suggest\" \"--\" \"install:0\"");
+    expect(script).to.not.contain("[\"a\" \"b\"]");
+}
+
+unittest {
+    expect(NuCompletion.generate(completionProgram())).to.not.contain("suggest");
 }

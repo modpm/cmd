@@ -170,3 +170,24 @@ unittest {
     expect(Argument.fromString("[ids:int...]", "d").formattedName(true).stripAnsi()).to.equal("[ids...]");
     expect(Argument.fromString("<format:json|yaml>", "d").formattedName(true).stripAnsi()).to.equal("<json|yaml>");
 }
+
+unittest {
+    auto argument = Argument.fromString("<input>", "Input file");
+    expect(argument.hasCompleter()).to.equal(false);
+    expect(argument.completer((prefix) => ["a", "b"])).to.equal(argument);
+    expect(argument.hasCompleter()).to.equal(true);
+    expect(argument.complete("")).to.equal(["a", "b"]);
+}
+
+unittest {
+    auto argument = Argument.fromString("<kind:x|y>", "Kind").completer((prefix) => ["z"]);
+    expect(argument.valueType.accepts("x")).to.equal(true);
+    expect(argument.valueType.accepts("z")).to.equal(false);
+    expect(argument.complete("")).to.equal(["z"]);
+}
+
+unittest {
+    auto argument = Argument.fromString("<input>", "Input file").completer((prefix) => [prefix ~ "!"]);
+    expect(argument.complete("ab")).to.equal(["ab!"]);
+    expect(argument.complete("")).to.equal(["!"]);
+}

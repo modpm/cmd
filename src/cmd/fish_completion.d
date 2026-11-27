@@ -3,6 +3,7 @@ module cmd.fish_completion;
 import std.algorithm;
 import std.array;
 import std.conv;
+import std.range : iota;
 import std.regex;
 import std.string;
 
@@ -37,7 +38,9 @@ package final class FishCompletion {
             return "printf '%s\\t%s\\t%s\\n' " ~ kind ~ " " ~ quote(name) ~ " " ~ quote(description);
         }
 
-        string value(const(ValueType) type) {
+        string value(const(ValueType) type, bool dynamic, string parameter) {
+            if (dynamic)
+                return "printf '%s\\n' dynamic " ~ quote(parameter);
             final switch (type.kind) {
                 case ValueType.Kind.file:
                     return "echo file";
@@ -84,7 +87,7 @@ package final class FishCompletion {
             load.put("        case " ~ quote(path) ~ "\n" ~ lines.map!(l => "            " ~ l ~ "\n").join());
 
             foreach (opt; cmd.options) {
-                const code = value(opt.valueType);
+                const code = value(opt.valueType, opt.hasCompleter(), path ~ ":" ~ names(opt)[$ - 1]);
                 if (code !is null)
                     option.put(
                         "        case " ~ names(opt).map!(n => quote(path ~ ":" ~ n)).join(" ") ~ "\n"
@@ -92,11 +95,14 @@ package final class FishCompletion {
                     );
             }
 
-            if (cmd.arguments.any!(a => value(a.valueType) !is null)) {
+            string argumentValue(size_t i) {
+                return value(cmd.arguments[i].valueType, cmd.arguments[i].hasCompleter(), path ~ ":" ~ i.to!string);
+            }
+            if (cmd.arguments.length.iota.any!(i => argumentValue(i) !is null)) {
                 argument.put("        case " ~ quote(path) ~ "\n            switch $argv[2]\n");
                 foreach (i, arg; cmd.arguments) {
                     const pattern = arg.variadic && i + 1 == cmd.arguments.length ? "'*'" : i.to!string;
-                    const code = value(arg.valueType);
+                    const code = argumentValue(i);
                     argument.put("                case " ~ pattern ~ "\n" ~ (code is null ? "" : "                    " ~ code ~ "\n"));
                 }
                 argument.put("            end\n");
@@ -229,6 +235,10 @@ function @FN@
             for v in $spec[2..-1]
                 printf '%s\n' $pre$v
             end
+        case dynamic
+            for v in (@CALL@ completion suggest -- $spec[2] "$prefix" 2>/dev/null)
+                printf '%s\n' $pre$v
+            end
     end
 end
 
@@ -236,6 +246,7 @@ complete -c @NAME@ -f -a '(@FN@)'
 `
             .replace("@FN@", "__" ~ program.name().replaceAll(regex("[^A-Za-z0-9_]"), "_"))
             .replace("@NAME@", quote(program.name()))
+            .replace("@CALL@", quote(program.name()))
             .replace("@PROGRAM@", program.name())
             .replace("@VERSION@", versionNames)
             .replace("@LOAD@", load.data.stripRight())
