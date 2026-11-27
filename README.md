@@ -91,6 +91,15 @@ ParsedArgs args = new Program("example")
     .parse(argv);
 ```
 
+### Environment Variables
+
+An option can fall back to an environment variable when it is not given. The command line takes precedence, then the
+environment variable, then the default value. An empty variable counts as not set.
+
+```d
+program.add(Option.fromString("-r, --registry <name>", "Registry").env("MYAPP_REGISTRY"));
+```
+
 ### Accessing Values
 
 Please see the API reference page for [`ParsedArgs`](https://modpm.github.io/cmd/cmd.parsed_args.ParsedArgs.html).

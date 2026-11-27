@@ -20,6 +20,8 @@ public final class Option : Flag {
     /** Default value of the parameter, or `null`. */
     public const string defaultValue;
 
+    private string environmentVariableName;
+
     private string[] delegate(string) completerDg;
 
     /**
@@ -114,6 +116,22 @@ public final class Option : Flag {
     public Option completer(string[] delegate(string prefix) source) nothrow @safe {
         this.completerDg = source;
         return this;
+    }
+
+    /**
+     * Sets the environment variable that provides the value if the option is not given. An empty variable counts as
+     * not set.
+     *
+     * Params:
+     *   name = Name of the environment variable.
+     */
+    public Option env(string name) nothrow @safe {
+        this.environmentVariableName = name;
+        return this;
+    }
+
+    package string environmentVariable() const nothrow @safe {
+        return environmentVariableName;
     }
 
     package bool hasCompleter() const nothrow @safe {
