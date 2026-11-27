@@ -283,7 +283,7 @@ unittest {
 unittest {
     auto command = new TestCommand("deploy")
         .option("-r, --registry <name>", "Registry", (prefix) => ["npm"])
-        .option("-t, --tag <tag>", "Tag", "latest", (prefix) => ["latest", "next"])
+        .option("-t, --tag [tag]", "Tag", "latest", (prefix) => ["latest", "next"])
         .argument("<package>", "Package", (prefix) => ["alpha"])
         .argument("[version]", "Version", "1.0", (prefix) => ["1.0", "2.0"]);
     expect(command.options.length).to.equal(2);
@@ -299,7 +299,7 @@ unittest {
 unittest {
     Program program = new TestProgram("app")
         .option("-r, --registry <name>", "Registry", (prefix) => ["npm"])
-        .option("-t, --tag <tag>", "Tag", "latest", (prefix) => ["next"])
+        .option("-t, --tag [tag]", "Tag", "latest", (prefix) => ["next"])
         .argument("<package>", "Package", (prefix) => ["alpha"])
         .argument("[version]", "Version", "1.0", (prefix) => ["2.0"]);
     expect(program.options.length).to.equal(2);
