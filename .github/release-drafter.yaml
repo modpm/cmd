@@ -21,22 +21,19 @@ categories:
       label: 'documentation'
   - title: 'Dependencies'
     when:
-      labels:
-        - 'dependencies'
-        - 'github_actions'
+      label: 'dependencies'
   - title: 'Other Changes'
 
-  # While the major version is 0, breaking changes bump the minor version and everything else bumps the patch version.
   - type: 'version-resolver'
     semver-increment: 'minor'
     when:
-      label: 'semver:major'
+      labels:
+        - 'semver:major'
+        - 'semver:minor'
   - type: 'version-resolver'
     semver-increment: 'patch'
     when:
-      labels:
-        - 'semver:minor'
-        - 'semver:patch'
+      label: 'semver:patch'
   - type: 'version-resolver'
     semver-increment: 'patch'
 
