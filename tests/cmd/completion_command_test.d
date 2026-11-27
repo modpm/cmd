@@ -13,9 +13,7 @@ import cmd.program;
 import cmd.test_support;
 
 class TestCompletionCommand : CompletionCommand {
-    public override noreturn error(string description, int status) const {
-        throw new CliExit(status, description);
-    }
+    mixin ThrowOnError;
 }
 
 Program completionHost() {

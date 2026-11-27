@@ -25,14 +25,18 @@ class CliExit : Exception {
     }
 }
 
+mixin template ThrowOnError() {
+    public override noreturn error(string description, int status) const {
+        throw new CliExit(status, description);
+    }
+}
+
 class TestProgram : Program {
     public this(string name) {
         super(name);
     }
 
-    public override noreturn error(string description, int status) const {
-        throw new CliExit(status, description);
-    }
+    mixin ThrowOnError;
 }
 
 class TestCommand : Command {
@@ -40,9 +44,7 @@ class TestCommand : Command {
         super(name);
     }
 
-    public override noreturn error(string description, int status) const {
-        throw new CliExit(status, description);
-    }
+    mixin ThrowOnError;
 }
 
 class TestHelpCommand : HelpCommand {
@@ -50,9 +52,7 @@ class TestHelpCommand : HelpCommand {
         super(description);
     }
 
-    public override noreturn error(string description, int status) const {
-        throw new CliExit(status, description);
-    }
+    mixin ThrowOnError;
 }
 
 string sp(size_t count) {
@@ -70,11 +70,11 @@ ParsedArgs parseOk(const Program program, string[] args...) {
     return program.parse(["prog"] ~ args);
 }
 
-void assertFails(const Program program, string message, string[] args...) {
+void assertFails(string file = __FILE__, size_t line = __LINE__)(const Program program, string message, string[] args...) {
     auto failure = parseFails(program, args);
-    expect(failure).to.not.beNull.because("expected failure: " ~ message);
-    expect(failure.status).to.equal(2);
-    expect(failure.msg).to.equal(message);
+    expect(failure, file, line).to.not.beNull.because("expected failure: " ~ message);
+    expect(failure.status, file, line).to.equal(2);
+    expect(failure.msg, file, line).to.equal(message);
 }
 
 CliExit collectCliExit(scope void delegate() action) {
