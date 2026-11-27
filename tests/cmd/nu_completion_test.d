@@ -111,5 +111,16 @@ unittest {
 }
 
 unittest {
+    auto program = new TestProgram("app").command(new TestCommand("install")
+        .option("--count <count:int>", "Count", (prefix) => ["1"])
+        .option("--file <file:file>", "File", (prefix) => ["a.txt"])
+        .option("--dir <dir:dir>", "Dir", (prefix) => ["d"]));
+    auto script = NuCompletion.generate(program);
+    expect(script).to.contain("--count: int@\"nu-complete app install count\" # Count\n");
+    expect(script).to.contain("--file: path@\"nu-complete app install file\" # File\n");
+    expect(script).to.contain("--dir: directory@\"nu-complete app install dir\" # Dir\n");
+}
+
+unittest {
     expect(NuCompletion.generate(completionProgram())).to.not.contain("suggest");
 }

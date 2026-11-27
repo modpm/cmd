@@ -45,7 +45,17 @@ package final class NuCompletion {
                     ~ " $prefix | lines } catch { [] }\n"
                     ~ "    }\n\n"
                 );
-                return "string@" ~ quote(name);
+                final switch (valueType.kind) {
+                    case ValueType.Kind.file:
+                        return "path@" ~ quote(name);
+                    case ValueType.Kind.dir:
+                        return "directory@" ~ quote(name);
+                    case ValueType.Kind.integer:
+                        return "int@" ~ quote(name);
+                    case ValueType.Kind.choice:
+                    case ValueType.Kind.text:
+                        return "string@" ~ quote(name);
+                }
             }
             final switch (valueType.kind) {
                 case ValueType.Kind.file:
